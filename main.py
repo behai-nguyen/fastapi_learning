@@ -2,6 +2,8 @@
 #
 # This code is from the official tutorial section:
 #     https://fastapi.tiangolo.com/tutorial/security/simple-oauth2/
+#
+# with some modifications.
 # 
 # To run:
 #     (venv) <path to venv Scripts/bin>/uvicorn main:app --host 0.0.0.0 --port 5000
@@ -10,33 +12,45 @@
 #     http://localhost:5000/docs
 #
 
-from typing import Annotated
+from typing import Annotated, Union
 
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import Depends, FastAPI, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel
 
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
+
+"""
+Note on 'hashed_password' field value: it's Argon2 hashed version of 'password'.
+It was hashed by https://argon2.online/.
+
+The Python implementation of Argon2 is https://pypi.org/project/argon2-cffi/,
+but we are not using this library yet.
+"""
 fake_users_db = {
-    "johndoe": {
-        "username": "johndoe",
-        "full_name": "John Doe",
-        "email": "johndoe@example.com",
-        "hashed_password": "fakehashedsecret",
-        "disabled": False,
+    "behai_nguyen@hotmail.com": {
+        "username": "behai_nguyen@hotmail.com",
+        "first_name": "Be Hai",
+        "last_name": "Doe",
+        "hashed_password": "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW",
     },
-    "alice": {
-        "username": "alice",
-        "full_name": "Alice Wonderson",
-        "email": "alice@example.com",
-        "hashed_password": "fakehashedsecret2",
-        "disabled": True,
+    "pranav.furedi.10198@gmail.com": {
+        "username": "pranav.furedi.10198@gmail.com",
+        "first_name": "Pranav",
+        "last_name": "Furedi",
+        "hashed_password": "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW",
     },
 }
 
 app = FastAPI()
 
+app.mount("/static", StaticFiles(directory="src/fastapi_learning/static"), name="static")
+templates = Jinja2Templates(directory="src/fastapi_learning/templates")
+
 def fake_hash_password(password: str):
-    return "fakehashed" + password
+    return "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW"
 
 """
 When we create an instance of the OAuth2PasswordBearer class we pass 
@@ -51,9 +65,8 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 class User(BaseModel):
     username: str
-    email: str | None = None
-    full_name: str | None = None
-    disabled: bool | None = None
+    first_name: Union[str, None] = None
+    last_name: Union[str, None] = None
 
 class UserInDB(User):
     hashed_password: str
@@ -70,7 +83,6 @@ def fake_decode_token(token):
     return user
 
 async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
-    print(f"get_current_user: <{token}>") # johndoe
     user = fake_decode_token(token)
     if not user:
         raise HTTPException(
@@ -83,8 +95,8 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
 async def get_current_active_user(
     current_user: Annotated[User, Depends(get_current_user)],
 ):
-    if current_user.disabled:
-        raise HTTPException(status_code=400, detail="Inactive user")
+    # if current_user.disabled:
+    #    raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
 
 @app.post("/token")
@@ -104,3 +116,8 @@ async def read_users_me(
     current_user: Annotated[User, Depends(get_current_active_user)],
 ):
     return current_user
+
+@app.get("/login", response_class=HTMLResponse)
+async def login_form(request: Request):
+    return templates.TemplateResponse(request=request, 
+        name="auth/login.html", context={"title": "FastAPI Login"})
