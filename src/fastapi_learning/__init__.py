@@ -26,4 +26,4 @@ class OAuth2PasswordBearerRedis(OAuth2PasswordBearer):
     
         return await super().__call__(request)
     
-oauth2_scheme = OAuth2PasswordBearerRedis(tokenUrl="/auth/token")
+oauth2_scheme = OAuth2PasswordBearerRedis(tokenUrl="/auth/token", auto_error=False)
