@@ -1,0 +1,35 @@
+<!-- 06/06/2024. -->
+
+{% extends 'base.html' %}
+
+{% block content %}
+
+<script>
+</script>
+
+<div>   
+    <h1 class="h3 mb-3 fw-normal">My Info</h1>
+
+    <div class="row">
+        <div class="col-2">User name:</div>
+        <div class="col-3">{{ username }}</div>
+    </div>
+
+    <div class="row">
+        <div class="col-2">First name:</div>
+        <div class="col-3">{{ first_name }}</div>
+    </div>
+
+    <div class="row">
+        <div class="col-2">Last name:</div>
+        <div class="col-3">{{ last_name }}</div>
+    </div>
+
+    <div class="row mt-2">
+        <div class="col">
+            <a class="link-opacity-100" href="/auth/home">Home</a>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
