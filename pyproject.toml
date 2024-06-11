@@ -23,6 +23,7 @@ dependencies = [
     'uvicorn[standard]',
     'starsessions[redis]',
     'aioredis',
+    'argon2-cffi',
 ]
 
 requires-python = ">=3.10"
