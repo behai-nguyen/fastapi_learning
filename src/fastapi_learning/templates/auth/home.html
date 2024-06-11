@@ -1,0 +1,52 @@
+<!-- 06/06/2024. -->
+
+{% extends 'base.html' %}
+
+{% block content %}
+
+<script>
+	function bindMyInfoJSON() {
+		$( '#meBtn' ).on( 'click', function( event ) {
+            runAjaxCrossDomain( 'get', '/admin/me', 
+                {"X-Expected-Format": APPLICATION_JSON}, '', '' ).
+                then( function( response ) {
+                    let { status, textStatus, jqXHR } = response;
+
+                    alert( JSON.stringify(status) );
+                }).
+                catch( function( response ) {
+                    let { xhr, error, errorThrown } = response;
+
+                    alert( errorThrown );
+                });            
+
+			event.preventDefault();
+		});
+	};
+
+	$( document ).ready( function() {
+        bindMyInfoJSON();
+	});
+</script>
+
+<div>   
+    <h1 class="h3 mb-3 fw-normal">Home</h1>
+
+    <div class="row">
+        <div class="col-2">
+            <button type="button" id="meBtn" class="btn btn-link">My Info as JSON</button>
+        </div>
+        <div class="col-2">
+            <form method="GET" action="/admin/me" id="meForm">
+                <button type="submit" class="btn btn-primary">My Info</button>
+            </form>
+        </div>
+        <div class="col-2">
+            <form method="POST" action="/auth/logout" id="logoutForm">
+                <button type="submit" class="btn btn-primary">Logout</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
