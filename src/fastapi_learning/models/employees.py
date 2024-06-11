@@ -14,6 +14,8 @@ See also:
 from typing import Union
 from pydantic import BaseModel
 
+from argon2 import PasswordHasher
+
 class User(BaseModel):
     username: str
     first_name: Union[str, None] = None
@@ -24,7 +26,7 @@ class UserInDB(User):
 
 """
 Note on 'hashed_password' field value: it's Argon2 hashed version of 'password'.
-It was hashed by https://argon2.online/.
+It was hashed by https://argon2.online/, using "Argon2id".
 
 The Python implementation of Argon2 is https://pypi.org/project/argon2-cffi/,
 but we are not using this library yet.
@@ -34,18 +36,21 @@ fake_users_db = {
         "username": "behai_nguyen@hotmail.com",
         "first_name": "Be Hai",
         "last_name": "Doe",
-        "hashed_password": "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW",
+        "hashed_password": "$argon2id$v=19$m=16,t=2,p=1$b2szcWQ4a0tlTkFydUdOaw$7LX7WCYbItEMEwvH3yUxPA",
     },
     "pranav.furedi.10198@gmail.com": {
         "username": "pranav.furedi.10198@gmail.com",
         "first_name": "Pranav",
         "last_name": "Furedi",
-        "hashed_password": "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW",
+        "hashed_password": "$argon2id$v=19$m=16,t=2,p=1$b2szcWQ4a0tlTkFydUdOaw$7LX7WCYbItEMEwvH3yUxPA",
     },
 }
 
-def fake_hash_password(password: str):
-    return "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW"
+def password_match(hashed_password, password: str):
+    try:
+        return PasswordHasher().verify(hashed_password, password)
+    except:
+        return False
 
 def get_user(db, username: str):
     if username in db:
