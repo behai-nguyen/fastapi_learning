@@ -32,9 +32,11 @@ app.add_middleware(SessionMiddleware, store=RedisStore(REDIS_URL), cookie_https_
 app.mount("/static", StaticFiles(directory="src/fastapi_learning/static"), name="static")
 
 app.include_router(auth.router)
+app.include_router(auth.api_router)
 app.include_router(admin.router)
+app.include_router(admin.api_router)
 
 @app.get("/", response_model=None)
 async def index(request: Request) -> Response | dict:
-    from fastapi_learning.controllers.auth import login_form
-    return await login_form(request)
+    from fastapi_learning.controllers.auth import login_page
+    return await login_page(request)
