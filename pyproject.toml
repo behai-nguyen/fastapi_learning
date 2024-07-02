@@ -18,7 +18,7 @@ classifiers = [
 keywords = ["fastapi", "learning"]
 
 dependencies = [
-    'tomli; python_version >= "3.10"',
+    'tomli; python_version >= "3.12"',
     'fastapi',
     'uvicorn[standard]',
     'starsessions[redis]',
@@ -26,7 +26,7 @@ dependencies = [
     'argon2-cffi',
 ]
 
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 
 [project.optional-dependencies]
 dev = [
