@@ -35,7 +35,11 @@ from fastapi_learning.common.consts import (
     LOGGED_IN_SESSION_MSG,
 )
 
+from fastapi_learning.common.queue_logging import logger
+
 from . import json_req, JsonAPIRoute
+
+logger = logger()
 
 router = APIRouter(
     prefix="/auth",
@@ -61,21 +65,29 @@ def __is_logged_in(request: Request) -> bool:
     return request.session.get("access_token") != None
 
 def __login_page(request: Request, state: int=0) -> HTMLResponse: 
+    logger.debug('Delivering the login page.')
+
     return templates.TemplateResponse(request=request, 
                 name="auth/login.html", context=__login_page_context(state))
 
 def __home_page(request: Request) -> HTMLResponse: 
+    logger.debug('Delivering the home page.')
+
     return templates.TemplateResponse(request=request, 
                 name="auth/home.html", context={"title": HOME_PAGE_TITLE})
 
 @router.get("/login", response_model=None)
 async def login_page(request: Request, state: int = 0) -> HTMLResponse:
+    logger.debug('Attempt to deliver the login page.')
+
     return RedirectResponse(url=router.url_path_for('home_page')) \
         if __is_logged_in(request) \
         else __login_page(request=request, state=state)
 
 @router.get("/home", response_model=None)
 async def home_page(request: Request) -> HTMLResponse:
+    logger.debug('Attempt to deliver the home page.')
+
     return RedirectResponse(url=f"{router.url_path_for('login_page')}?state=2") \
         if not __is_logged_in(request) \
         else __home_page(request=request)
@@ -117,6 +129,8 @@ async def login(request: Request,
       The ``detail`` field value is ``INVALID_USERNAME_PASSWORD_MSG``.    
     """
 
+    logger.debug('Attempt to log in...')
+
     def bad_login():
         if json_req(request):
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, 
@@ -126,11 +140,15 @@ async def login(request: Request,
                                     status_code=status.HTTP_303_SEE_OTHER)
 
     if __is_logged_in(request): 
+        logger.debug(LOGGED_IN_SESSION_MSG)
+
         return {"detail": LOGGED_IN_SESSION_MSG} if json_req(request) \
             else RedirectResponse(url=router.url_path_for('home_page'), status_code=status.HTTP_303_SEE_OTHER)
 
     user_dict = fake_users_db.get(form_data.username)
     if not user_dict:
+        logger.debug(INVALID_USERNAME_PASSWORD_MSG)
+
         return bad_login()
     
     user = UserInDB(**user_dict)
@@ -158,6 +176,8 @@ async def logout(request: Request):
     When an error occurs, the returned login page will contain the text 
     ``NOT_LOGGED_IN_SESSION_MSG``.
     """
+
+    logger.debug('Attempt to log out...')
 
     inc_not_login_msg = 1 if request.session.get("access_token") == None else 0
     

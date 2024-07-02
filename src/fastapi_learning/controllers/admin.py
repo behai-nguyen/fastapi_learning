@@ -30,7 +30,11 @@ from fastapi_learning.common.consts import (
     ME_PAGE_TITLE,
 )
 
+from fastapi_learning.common.queue_logging import logger
+
 from . import json_req, JsonAPIRoute
+
+logger = logger()
 
 router = APIRouter(
     prefix="/admin",
@@ -48,6 +52,8 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
     # This is the same exception raised by OAuth2PasswordBearer. 
     # We are taking control of the authentication flow.    
     if token == None:
+        logger.debug('No token.')
+
         return HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=NOT_AUTHENTICATED_MSG,
@@ -56,6 +62,8 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
 
     user = fake_decode_token(token)
     if not user:
+        logger.debug('No user.')
+
         return HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=INVALID_AUTH_CREDENTIALS_MSG,
@@ -107,9 +115,13 @@ async def read_users_me(
         return templates.TemplateResponse(request=request, name="admin/me.html", 
                 context=user_dict)
         
-    if isinstance(current_user, UserInDB):        
+    if isinstance(current_user, UserInDB):
+        logger.debug('Returning a valid logged-in user.')
+
         return current_user if json_req(request) else page_me()
     else:
+        logger.debug('No valid logged-in user found.')
+
         if json_req(request): 
             raise current_user  
         else: 
