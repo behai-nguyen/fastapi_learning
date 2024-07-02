@@ -6,6 +6,42 @@ Documentation of my [FastAPI](https://fastapi.tiangolo.com/learn/) learning proc
 
 Posts are listed in the [Related post(s)](#related-posts) section below. Each entry includes the link to the actual post, the ``git clone`` command for the target code revision, and an excerpt from the post.
 
+## The Code After Tag v0.4.0 Requires Python 3.12.4
+
+To install Python 3.12.4, please refer to the following post: [Installing Python 3.12.4 as an Additional Interpreter on Ubuntu 22.10 and Windows 10](https://behainguyen.wordpress.com/2024/06/28/installing-python-3-12-4-as-an-additional-interpreter-on-ubuntu-22-10-and-windows-10/).
+
+### Preparing a New Virtual Environment ``venv`` Using Python 3.12.4
+
+Simply remove the existing virtual environment ``venv`` and recreate it using the following command:
+
+```
+▶️Windows 10: F:\fastapi_learning>C:\PF\Python312\python.exe -m venv venv
+▶️Ubuntu 22.10: behai@hp-pavilion-15:~/fastapi_learning$ /usr/local/bin/python3.12 -m venv venv
+```
+
+Verify the version of the Python interpreter in ``venv``:
+
+```
+▶️Windows 10: (venv) F:\fastapi_learning>venv\Scripts\python.exe --version
+▶️Ubuntu 22.10: (venv) behai@hp-pavilion-15:~/fastapi_learning$ ./venv/bin/python --version
+```
+
+### Installing Third Party Packages
+
+#### Run Time Packages
+
+```
+▶️Windows 10: (venv) F:\fastapi_learning>venv\Scripts\pip.exe install -e .
+▶️Ubuntu 22.10: (venv) behai@hp-pavilion-15:~/fastapi_learning$ ./venv/bin/pip install -e .
+```
+
+#### Development Dependency Packages (for testing and development)
+
+```
+▶️Windows 10: (venv) F:\fastapi_learning>venv\Scripts\pip.exe install -e .[dev]
+▶️Ubuntu 22.10: (venv) behai@hp-pavilion-15:~/fastapi_learning$ ./venv/bin/pip install -e .[dev]
+```
+
 ## Related post(s)
 
 1. [Python FastAPI: Some Further Studies on OAuth2 Security](https://behainguyen.wordpress.com/2024/05/11/python-fastapi-some-further-studies-on-oauth2-security/)
@@ -40,6 +76,14 @@ git clone -b v0.4.0 https://github.com/behai-nguyen/fastapi_learning.git
 ```
 
 In the <a href="https://behainguyen.wordpress.com/2024/05/21/python-fastapi-implementing-persistent-stateful-http-sessions-with-redis-session-middleware-and-extending-oauth2passwordbearer-for-oauth2-security/" title="Python FastAPI: Implementing Persistent Stateful HTTP Sessions with Redis Session Middleware and Extending OAuth2PasswordBearer for OAuth2 Security" target="_blank">third post</a>, we implemented persistent stateful HTTP sessions. In this post, we will complete the application’s authentication UI flow. For the existing <code>/auth/token</code> and <code>/admin/me</code> routes, we will add functionality to conditionally return either HTML or JSON. Based on this new functionality, we will implement two new routes: <code>/api/login</code> and <code>/api/me</code>. These routes will only return JSON, and their endpoint handlers will be the same as those of the aforementioned routes respectively.
+
+5. [Python FastAPI: Implementing Non-Blocking Logging with Built-In QueueHandler and QueueListener Classes](https://behainguyen.wordpress.com/2024/07/02/python-fastapi-implementing-non-blocking-logging-with-built-in-queuehandler-and-queuelistener-classes/)
+
+```
+git clone -b v0.5.0 https://github.com/behai-nguyen/fastapi_learning.git
+```
+
+Continuing with our <a href="https://github.com/behai-nguyen/fastapi_learning" title="Index of the Python FastAPI Complete Series" target="_blank">Python FastAPI learning series</a>, this post explores the implementation of non-blocking logging using Python’s built-in <a href="https://docs.python.org/3/library/logging.config.html#configuring-queuehandler-and-queuelistener" title="Configuring QueueHandler and QueueListener" target="_blank">QueueHandler and QueueListener classes</a>.
 
 ## License
 [MIT license](http://www.opensource.org/licenses/mit-license.php)
