@@ -85,6 +85,14 @@ git clone -b v0.5.0 https://github.com/behai-nguyen/fastapi_learning.git
 
 Continuing with our <a href="https://github.com/behai-nguyen/fastapi_learning" title="Index of the Python FastAPI Complete Series" target="_blank">Python FastAPI learning series</a>, this post explores the implementation of non-blocking logging using Python’s built-in <a href="https://docs.python.org/3/library/logging.config.html#configuring-queuehandler-and-queuelistener" title="Configuring QueueHandler and QueueListener" target="_blank">QueueHandler and QueueListener classes</a>.
 
+6. [Python FastAPI: Implementing SSL/HTTPS and CORS](https://behainguyen.wordpress.com/2024/07/25/python-fastapi-implementing-ssl-https-and-cors/)
+
+```
+git clone -b v0.6.0 https://github.com/behai-nguyen/fastapi_learning.git
+```
+
+In this installment of our <a href="https://github.com/behai-nguyen/fastapi_learning" title="Index of the Python FastAPI Complete Series" target="_blank">Python FastAPI learning series</a>, we explore the implementation of SSL/HTTPS for <code>localhost</code> and also the enabling of Cross-Origin Resource Sharing, or CORS.
+
 ## License
 [MIT license](http://www.opensource.org/licenses/mit-license.php)
 and the [GPL license](http://www.gnu.org/licenses/gpl.html).
