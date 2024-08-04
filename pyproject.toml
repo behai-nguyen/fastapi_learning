@@ -24,7 +24,12 @@ dependencies = [
     'starsessions[redis]',
     'aioredis',
     'argon2-cffi',
+    'werkzeug',
     'python-dotenv',
+    'wtforms',
+    'bh-database[mysql-connector-python]',
+    'bh-database[psycopg2-binary]',
+    'bh_apistatus',
 ]
 
 requires-python = ">=3.12"
