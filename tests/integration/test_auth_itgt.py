@@ -23,12 +23,102 @@ from fastapi import status as http_status
 
 from fastapi_learning.common.consts import (
     FORMAT_HEADER,
+    LOGIN_PAGE_TITLE,
+    HOME_PAGE_TITLE,
+    BAD_LOGIN_MSG,
     INVALID_USERNAME_PASSWORD_MSG
 )
 
 from tests import test_main
 
 from tests import logout, login
+
+@pytest.mark.auth_integration
+def test_integration_login_bad_email_html(test_client):
+    """
+    Test /auth/token path with a valid credential.
+    """
+
+    importlib.reload(test_main)
+
+    test_client.headers.clear()
+
+    try:
+        login_data = {
+            'username': '@hotmail.com',
+            'password': 'password'
+        }
+        login_response = test_client.post('/auth/token', data=login_data)
+
+        assert login_response != None
+        assert login_response.status_code == http_status.HTTP_200_OK
+
+        # Login page.
+        assert (f'<title>{LOGIN_PAGE_TITLE}</title>' in login_response.text) == True
+        assert (f'<h4>{BAD_LOGIN_MSG}</h4>' in login_response.text) == True
+
+    finally:
+        pass
+
+@pytest.mark.auth_integration
+def test_integration_login_bad_email_json(test_client):
+    """
+    Test /auth/token path with a valid credential.
+    """
+
+    importlib.reload(test_main)
+
+    test_client.headers.clear()
+
+    try:
+        # Expect JSON response.
+        test_client.headers = {FORMAT_HEADER: types_map['.json']}
+
+        login_data = {
+            'username': '@hotmail.com',
+            'password': 'password'
+        }
+        login_response = test_client.post('/auth/token', data=login_data)
+
+        assert login_response != None
+        assert login_response.status_code == http_status.HTTP_400_BAD_REQUEST
+
+        json = login_response.json()
+        # assert json['status_code'] == http_status.HTTP_400_BAD_REQUEST
+        assert json['detail'] == BAD_LOGIN_MSG
+
+    finally:
+        pass
+
+@pytest.mark.auth_integration
+def test_integration_login_bad_password_json(test_client):
+    """
+    Test /auth/token path with a valid credential.
+    """
+
+    importlib.reload(test_main)
+
+    test_client.headers.clear()
+
+    try:
+        # Expect JSON response.
+        test_client.headers = {FORMAT_HEADER: types_map['.json']}
+
+        login_data = {
+            'username': 'behai_nguyen@hotmail.com',
+            'password': '0123456789-0123456789-0123456789-0123456789'
+        }
+        login_response = test_client.post('/auth/token', data=login_data)
+
+        assert login_response != None
+        assert login_response.status_code == http_status.HTTP_400_BAD_REQUEST
+
+        json = login_response.json()
+        # assert json['status_code'] == http_status.HTTP_400_BAD_REQUEST
+        assert json['detail'] == BAD_LOGIN_MSG
+
+    finally:
+        pass
 
 @pytest.mark.auth_integration
 def test_integration_valid_login_html(test_client):
@@ -51,7 +141,7 @@ def test_integration_valid_login_html(test_client):
         assert login_response.status_code == http_status.HTTP_200_OK
 
         # Home page.
-        assert ('<title>Learn FastAPI Home</title>' in login_response.text) == True
+        assert (f'<title>{HOME_PAGE_TITLE}</title>' in login_response.text) == True
         assert ('<button type="submit" class="btn btn-primary">Logout</button>' in login_response.text) == True
 
     finally:
@@ -90,7 +180,6 @@ def test_integration_valid_login_json(test_client):
         logout(login_response, test_client)
 
 @pytest.mark.auth_integration
-# @pytest.mark.behai_only
 def test_integration_invalid_username_login_html(test_client):
     """
     Test /auth/token path with an invalid username.
@@ -340,8 +429,8 @@ def test_integration_get_login_page_while_logged_in(test_client):
         assert response != None
         assert response.status_code == http_status.HTTP_200_OK
         # Should get home page.
-        assert ('<title>Learn FastAPI Home</title>' in login_response.text) == True
-        assert ('<button type="submit" class="btn btn-primary">Logout</button>' in login_response.text) == True
+        assert ('<title>Learn FastAPI Home</title>' in response.text) == True
+        assert ('<button type="submit" class="btn btn-primary">Logout</button>' in response.text) == True
 
     finally:
         # Logout. Clean up server sessions.
