@@ -93,6 +93,14 @@ git clone -b v0.6.0 https://github.com/behai-nguyen/fastapi_learning.git
 
 In this installment of our <a href="https://github.com/behai-nguyen/fastapi_learning" title="Index of the Python FastAPI Complete Series" target="_blank">Python FastAPI learning series</a>, we explore the implementation of SSL/HTTPS for <code>localhost</code> and also the enabling of Cross-Origin Resource Sharing, or CORS.
 
+7. [Python FastAPI: Enabling Database Support](https://behainguyen.wordpress.com/2024/08/04/python-fastapi-enabling-database-support/)
+
+```
+git clone -b v0.7.0 https://github.com/behai-nguyen/fastapi_learning.git
+```
+
+Continuing with our <a href="https://github.com/behai-nguyen/fastapi_learning" title="Index of the Python FastAPI Complete Series" target="_blank">Python FastAPI learning series</a>, in this installment, we enable database support for <a href="https://www.mysql.com/" title="MySQL database" target="_blank">MySQL</a>, <a href="https://www.postgresql.org/" title="PostgreSQL database" target="_blank">PostgreSQL</a>, and <a href="https://mariadb.com/" title="MariaDB database" target="_blank">MariaDB</a>. We will not add any new functionality; instead, the existing authentication process will check user information from a proper database instead of mock hard-coded data. We will also add a business logic layer responsible for data validation, enforcing business rules, etc.
+
 ## License
 [MIT license](http://www.opensource.org/licenses/mit-license.php)
 and the [GPL license](http://www.gnu.org/licenses/gpl.html).
