@@ -33,18 +33,37 @@ from fastapi_learning.common.queue_logging import (
     RequestLoggingMiddleware,
 )
 
+from bh_database.core import Database
+
 from fastapi_learning.controllers import auth, admin
 
 prepare_logging_and_start_listeners()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger().info("fastapi_learning startup complete.")
+    logger_fn = logger()
+
+    logger_fn.info("fastapi_learning attempting to start...")
+
+    Database.disconnect()
+
+    # It is the responsibility of the caller to handle this exception.
+    try:
+        Database.connect(os.environ.get('SQLALCHEMY_DATABASE_URI'), 
+                         os.environ.get('SQLALCHEMY_DATABASE_SCHEMA'))
+    except Exception as e:
+        logger_fn.exception(str(e))
+        logger_fn.error('Attempt to terminate the application now.')
+        # raise RuntimeError(...) flushes any pending loggings and 
+        # also terminates the application.        
+        raise RuntimeError('Failed to connect to the target database.')
+
+    logger_fn.info("fastapi_learning startup complete.")
 
     yield
 
-    logger().info("fastapi_learning is shutting down...")
-    logger().info("Logging queue listener will stop listening...")
+    logger_fn.info("fastapi_learning is shutting down...")
+    logger_fn.info("Logging queue listener will stop listening...")
 
     logging_stop_listeners()
 
