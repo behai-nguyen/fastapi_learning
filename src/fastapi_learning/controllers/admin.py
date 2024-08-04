@@ -10,19 +10,21 @@ from fastapi import (
     HTTPException, 
     status,
     Request,
+    status,
 )
 
 from fastapi_learning import oauth2_scheme
 
 from fastapi.responses import RedirectResponse
 
-from fastapi_learning.controllers import templates
-
-from fastapi_learning.models.employees import (
-    User,
-    fake_decode_token,
-    UserInDB,
+from fastapi_learning.controllers import (
+    is_logged_in,
+    templates,
 )
+
+from fastapi_learning.models.employees import LoggedInEmployee
+
+from fastapi_learning.businesses.employees_mgr import EmployeesManager
 
 from fastapi_learning.common.consts import (
     INVALID_AUTH_CREDENTIALS_MSG,
@@ -60,8 +62,10 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
             headers={"WWW-Authenticate": "Bearer"},
         )        
 
-    user = fake_decode_token(token)
-    if not user:
+    op_status = EmployeesManager().select_by_email(token)
+    # Enables this to simulate token became invalid after logged in.
+    # op_status = EmployeesManager().select_by_email('token@gmail.com')
+    if op_status.code != status.HTTP_200_OK:
         logger.debug('No user.')
 
         return HTTPException(
@@ -70,17 +74,17 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    return user
+    return LoggedInEmployee(**op_status.data[0])
     
 async def get_current_active_user(
-    current_user: Annotated[User, Depends(get_current_user)],
+    current_user: Annotated[LoggedInEmployee, Depends(get_current_user)],
 ):
     return current_user
 
 @router.get("/me")
 async def read_users_me(
     request: Request,
-    current_user: Annotated[User, Depends(get_current_active_user)]
+    current_user: Annotated[LoggedInEmployee, Depends(get_current_active_user)]
 ):
     """
     This returns the currently logged-in user’s information in either 
@@ -113,9 +117,9 @@ async def read_users_me(
         user_dict.update({"title": ME_PAGE_TITLE})
 
         return templates.TemplateResponse(request=request, name="admin/me.html", 
-                context=user_dict)
+                context={'data': user_dict})
         
-    if isinstance(current_user, UserInDB):
+    if isinstance(current_user, LoggedInEmployee):
         logger.debug('Returning a valid logged-in user.')
 
         return current_user if json_req(request) else page_me()
@@ -123,16 +127,25 @@ async def read_users_me(
         logger.debug('No valid logged-in user found.')
 
         if json_req(request): 
-            raise current_user  
+            raise current_user
         else: 
-            return RedirectResponse(url='/auth/login?state=2')
+            if is_logged_in(request):                
+                # This error:
+                # {'status_code': 401, 'detail': 'Invalid authentication credentials', 'headers': {'WWW-Authenticate': 'Bearer'}}
+                # should not happen. It happens if the email in the database changed while                 
+                # user logged in.
+                #
+                return templates.TemplateResponse(request=request, name="admin/me.html", 
+                        context={'data': vars(current_user)})
+            else:
+                return RedirectResponse(url='/auth/login?state=2')
 
 #=================================== /api ==================================
 
 @api_router.get("/me")
 async def read_users_me_api(
     request: Request,
-    current_user: Annotated[User, Depends(get_current_active_user)]
+    current_user: Annotated[LoggedInEmployee, Depends(get_current_active_user)]
 ):
     """
     This endpoint is equivalent to ``/admin/me``, with the incoming request 
