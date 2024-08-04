@@ -6,13 +6,26 @@ from typing import Callable, Tuple
 
 from mimetypes import types_map
 from fastapi.templating import Jinja2Templates
+from jinja2 import Environment
 from fastapi import Request, Response
 
 from fastapi.routing import APIRoute
 
 from fastapi_learning.common.consts import FORMAT_HEADER
 
+def valid_logged_in_employee(data: dict):
+    """
+    Used by templates. See ./templates/admin/me.html.
+    """
+
+    if 'email' in data:
+        return True
+    return False
+
 templates = Jinja2Templates(directory="src/fastapi_learning/templates")
+# Added functions to be used by templates.
+# 
+templates.env.globals['valid_logged_in_employee'] = valid_logged_in_employee
 
 def json_req(request: Request):
     if FORMAT_HEADER in request.headers:
@@ -20,6 +33,12 @@ def json_req(request: Request):
             return True
 
     return False
+
+def is_logged_in(request: Request) -> bool:
+    """
+    Is the current session authenticated?
+    """
+    return request.session.get("access_token") != None
 
 class JsonAPIRoute(APIRoute):
     """
