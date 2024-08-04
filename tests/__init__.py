@@ -4,16 +4,28 @@
 # Tests helper functions.
 # 
 
+import os
+
+from dotenv import load_dotenv
+
 from http import HTTPStatus
 
 from fastapi import Response
 from fastapi.testclient import TestClient
+
+from bh_database.core import Database
 
 # 
 # Note: import the main.py module so that conftest.py can
 # import this, i.e. test_main.
 # 
 import main as test_main
+
+load_dotenv( os.path.join(os.getcwd(), '.env') )
+
+Database.disconnect()
+Database.connect(os.environ.get('SQLALCHEMY_DATABASE_URI'), 
+                    os.environ.get('SQLALCHEMY_DATABASE_SCHEMA'))
 
 def logout(last_response: Response, test_client: TestClient):
     """
