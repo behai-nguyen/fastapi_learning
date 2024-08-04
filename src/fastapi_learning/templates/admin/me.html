@@ -10,20 +10,52 @@
 <div>   
     <h1 class="h3 mb-3 fw-normal">My Info</h1>
 
+    {% if valid_logged_in_employee(data) %}
     <div class="row">
         <div class="col-2">User name:</div>
-        <div class="col-3">{{ username }}</div>
+        <div class="col-3">{{ data['email'] }}</div>
     </div>
 
     <div class="row">
-        <div class="col-2">First name:</div>
-        <div class="col-3">{{ first_name }}</div>
+        <div class="col-2">Birth Date:</div>
+        <div class="col-3">{{ data['birth_date'] }}</div>
     </div>
 
     <div class="row">
-        <div class="col-2">Last name:</div>
-        <div class="col-3">{{ last_name }}</div>
+        <div class="col-2">First Name:</div>
+        <div class="col-3">{{ data['first_name'] }}</div>
     </div>
+
+    <div class="row">
+        <div class="col-2">Last Name:</div>
+        <div class="col-3">{{ data['last_name'] }}</div>
+    </div>
+
+    <div class="row">
+        <div class="col-2">Gender:</div>
+        <div class="col-3">{{ data['gender'] }}</div>
+    </div>
+
+    <div class="row">
+        <div class="col-2">Hire Date:</div>
+        <div class="col-3">{{ data['hire_date'] }}</div>
+    </div>
+
+    {% else %}
+
+    <div class="row">
+        <div class="col">
+            <h2>It's on me... Please contact support, quoting the below message:</h2>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col">
+            <h2 class="text-danger fw-bold">{{ data['detail'] }}</h2>
+        </div>
+    </div>
+
+    {% endif %}
 
     <div class="row mt-2">
         <div class="col">
