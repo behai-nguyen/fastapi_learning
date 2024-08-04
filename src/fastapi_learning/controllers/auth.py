@@ -17,20 +17,22 @@ from fastapi.responses import (
     RedirectResponse,
 )
 
-from fastapi_learning.models.employees import (
-    UserInDB,
-    fake_users_db, 
-    password_match,
-)
+from bh_apistatus.result_status import ResultStatus
 
-from fastapi_learning.controllers import templates
+from fastapi_learning.businesses.employees_mgr import EmployeesManager
+
+from fastapi_learning.controllers import (
+    is_logged_in,
+    templates,
+)
 
 from fastapi_learning.common.consts import (
     LOGIN_PAGE_TITLE,
     HOME_PAGE_TITLE,
+    LOGIN_ERROR_MSG,
+    BAD_LOGIN_MSG,
     INVALID_USERNAME_PASSWORD_MSG,
     NOT_LOGGED_IN_SESSION_MSG,
-    ALREADY_LOGGED_IN_MSG,
     LOG_IN_CONTINUE_MSG,
     LOGGED_IN_SESSION_MSG,
 )
@@ -56,13 +58,12 @@ def __login_page_context(state: int) -> dict:
     match state:
         case 1: context.update({"message": NOT_LOGGED_IN_SESSION_MSG})
         case 2: context.update({"message": LOG_IN_CONTINUE_MSG})
-        case 3: context.update({"message": INVALID_USERNAME_PASSWORD_MSG})
+        # case 3: context.update({"message": INVALID_USERNAME_PASSWORD_MSG})
+        case status.HTTP_401_UNAUTHORIZED: context.update({"message": INVALID_USERNAME_PASSWORD_MSG})
+        case status.HTTP_500_INTERNAL_SERVER_ERROR: context.update({"message": BAD_LOGIN_MSG})
         case _: pass
 
     return context
-
-def __is_logged_in(request: Request) -> bool:
-    return request.session.get("access_token") != None
 
 def __login_page(request: Request, state: int=0) -> HTMLResponse: 
     logger.debug('Delivering the login page.')
@@ -81,7 +82,7 @@ async def login_page(request: Request, state: int = 0) -> HTMLResponse:
     logger.debug('Attempt to deliver the login page.')
 
     return RedirectResponse(url=router.url_path_for('home_page')) \
-        if __is_logged_in(request) \
+        if is_logged_in(request) \
         else __login_page(request=request, state=state)
 
 @router.get("/home", response_model=None)
@@ -89,7 +90,7 @@ async def home_page(request: Request) -> HTMLResponse:
     logger.debug('Attempt to deliver the home page.')
 
     return RedirectResponse(url=f"{router.url_path_for('login_page')}?state=2") \
-        if not __is_logged_in(request) \
+        if not is_logged_in(request) \
         else __home_page(request=request)
 
 @router.post("/token")
@@ -131,33 +132,37 @@ async def login(request: Request,
 
     logger.debug('Attempt to log in...')
 
-    def bad_login():
+    def bad_login(op_status: ResultStatus):
+        # code 500: invalid email value or password value or database retrieval failed.
+        # code 401: email or password does not match.
+        match op_status.code:
+            case status.HTTP_401_UNAUTHORIZED: message = INVALID_USERNAME_PASSWORD_MSG
+            case status.HTTP_500_INTERNAL_SERVER_ERROR: message = BAD_LOGIN_MSG
+            case _: message = LOGIN_ERROR_MSG
+
         if json_req(request):
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, 
-                                detail=INVALID_USERNAME_PASSWORD_MSG)
+                                detail=message)
         else:
-            return RedirectResponse(url=f"{router.url_path_for('login_page')}?state=3", 
+            return RedirectResponse(url=f"{router.url_path_for('login_page')}?state={op_status.code}", 
                                     status_code=status.HTTP_303_SEE_OTHER)
 
-    if __is_logged_in(request): 
+    if is_logged_in(request): 
         logger.debug(LOGGED_IN_SESSION_MSG)
 
         return {"detail": LOGGED_IN_SESSION_MSG} if json_req(request) \
             else RedirectResponse(url=router.url_path_for('home_page'), status_code=status.HTTP_303_SEE_OTHER)
 
-    user_dict = fake_users_db.get(form_data.username)
-    if not user_dict:
-        logger.debug(INVALID_USERNAME_PASSWORD_MSG)
+    op_status = EmployeesManager().login(form_data.username, form_data.password)
 
-        return bad_login()
+    if op_status.code != status.HTTP_200_OK:
+        return bad_login(op_status)
     
-    user = UserInDB(**user_dict)
-    if not password_match(user.hashed_password, form_data.password):
-        return bad_login()
-    
-    request.session["access_token"] = user.username
+    user_username = op_status.data[0]['email']
 
-    return {"access_token": user.username, "token_type": "bearer"} \
+    request.session["access_token"] = user_username
+
+    return {"access_token": user_username, "token_type": "bearer"} \
         if json_req(request) \
         else RedirectResponse(url=router.url_path_for('home_page'), status_code=status.HTTP_303_SEE_OTHER)
 
