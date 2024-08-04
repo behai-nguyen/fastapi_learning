@@ -57,10 +57,10 @@ def test_integration_valid_admin_own_detail_json(test_client):
         assert response.status_code == http_status.HTTP_200_OK
 
         status = response.json()
-        assert status['username'] == 'behai_nguyen@hotmail.com'
+        assert status['email'] == 'behai_nguyen@hotmail.com'
         assert status['first_name'] == 'Be Hai'
-        assert status['last_name'] == 'Doe'
-        assert status['hashed_password'] == '$argon2id$v=19$m=16,t=2,p=1$b2szcWQ4a0tlTkFydUdOaw$7LX7WCYbItEMEwvH3yUxPA'
+        assert status['last_name'] == 'Nguyen'
+        assert status['password'] == '$argon2id$v=19$m=16,t=2,p=1$b2szcWQ4a0tlTkFydUdOaw$7LX7WCYbItEMEwvH3yUxPA'
 
     finally:
         # Logout. Clean up server sessions.
@@ -92,7 +92,7 @@ def test_integration_valid_admin_own_detail_html(test_client):
         # admin me.html page.
         assert ('<div class="col-3">behai_nguyen@hotmail.com</div>' in response.text) == True
         assert ('<div class="col-3">Be Hai</div>' in response.text) == True
-        assert ('<div class="col-3">Doe</div>' in response.text) == True
+        assert ('<div class="col-3">Nguyen</div>' in response.text) == True
 
     finally:
         # Logout. Clean up server sessions.

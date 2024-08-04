@@ -84,10 +84,10 @@ def test_integration_valid_admin_own_detail(test_client):
         assert response.status_code == http_status.HTTP_200_OK
 
         status = response.json()
-        assert status['username'] == 'behai_nguyen@hotmail.com'
+        assert status['email'] == 'behai_nguyen@hotmail.com'
         assert status['first_name'] == 'Be Hai'
-        assert status['last_name'] == 'Doe'
-        assert status['hashed_password'] == '$argon2id$v=19$m=16,t=2,p=1$b2szcWQ4a0tlTkFydUdOaw$7LX7WCYbItEMEwvH3yUxPA'
+        assert status['last_name'] == 'Nguyen'
+        assert status['password'] == '$argon2id$v=19$m=16,t=2,p=1$b2szcWQ4a0tlTkFydUdOaw$7LX7WCYbItEMEwvH3yUxPA'
 
     finally:
         # Logout. Clean up server sessions.
