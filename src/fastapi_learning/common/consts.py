@@ -2,7 +2,7 @@
 15/05/2024.
 """
 
-FORMAT_HEADER = "x-expected-format"
+RESPONSE_FORMAT = "x-expected-format"
 
 LOGIN_PAGE_TITLE = "Learn FastAPI Login"
 HOME_PAGE_TITLE = "Learn FastAPI Home"
