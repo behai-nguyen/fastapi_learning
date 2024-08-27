@@ -22,7 +22,7 @@ import pytest
 from fastapi import status as http_status
 
 from fastapi_learning.common.consts import (
-    FORMAT_HEADER,
+    RESPONSE_FORMAT,
     LOGIN_PAGE_TITLE,
     HOME_PAGE_TITLE,
     BAD_LOGIN_MSG,
@@ -46,7 +46,8 @@ def test_integration_login_bad_email_html(test_client):
     try:
         login_data = {
             'username': '@hotmail.com',
-            'password': 'password'
+            'password': 'password',
+            'x-expected-format': 'text/html',
         }
         login_response = test_client.post('/auth/token', data=login_data)
 
@@ -72,7 +73,7 @@ def test_integration_login_bad_email_json(test_client):
 
     try:
         # Expect JSON response.
-        test_client.headers = {FORMAT_HEADER: types_map['.json']}
+        test_client.headers = {RESPONSE_FORMAT: types_map['.json']}
 
         login_data = {
             'username': '@hotmail.com',
@@ -102,7 +103,7 @@ def test_integration_login_bad_password_json(test_client):
 
     try:
         # Expect JSON response.
-        test_client.headers = {FORMAT_HEADER: types_map['.json']}
+        test_client.headers = {RESPONSE_FORMAT: types_map['.json']}
 
         login_data = {
             'username': 'behai_nguyen@hotmail.com',
@@ -133,7 +134,8 @@ def test_integration_valid_login_html(test_client):
     try:
         login_data = {
             'username': 'behai_nguyen@hotmail.com',
-            'password': 'password'
+            'password': 'password',
+            'x-expected-format': 'text/html',
         }
         login_response = test_client.post('/auth/token', data=login_data)
 
@@ -160,7 +162,7 @@ def test_integration_valid_login_json(test_client):
 
     try:
         # Expect JSON response.
-        test_client.headers = {FORMAT_HEADER: types_map['.json']}
+        test_client.headers = {RESPONSE_FORMAT: types_map['.json']}
 
         login_data = {
             'username': 'behai_nguyen@hotmail.com',
@@ -191,7 +193,8 @@ def test_integration_invalid_username_login_html(test_client):
 
     login_data = {
         'username': 'behai@example.com',
-        'password': 'password'
+        'password': 'password',
+        'x-expected-format': 'text/html',
     }
     response = test_client.post('/auth/token', data=login_data)
 
@@ -215,7 +218,8 @@ def test_integration_invalid_password_login_html(test_client):
 
     login_data = {
         'username': 'behai_nguyen@hotmail.com',
-        'password': 'xxxx'
+        'password': 'xxxx',
+        'x-expected-format': 'text/html',
     }
     response = test_client.post('/auth/token', data=login_data)
 
@@ -238,7 +242,7 @@ def test_integration_invalid_username_login_json(test_client):
     test_client.headers.clear()
 
     # Expect JSON response.
-    test_client.headers = {FORMAT_HEADER: types_map['.json']}    
+    test_client.headers = {RESPONSE_FORMAT: types_map['.json']}    
 
     login_data = {
         'username': 'behai@example.com',
@@ -263,7 +267,7 @@ def test_integration_invalid_password_login_json(test_client):
     test_client.headers.clear()
 
     # Expect JSON response.
-    test_client.headers = {FORMAT_HEADER: types_map['.json']}    
+    test_client.headers = {RESPONSE_FORMAT: types_map['.json']}    
 
     login_data = {
         'username': 'behai_nguyen@hotmail.com',
@@ -290,7 +294,8 @@ def test_integration_valid_login_twice(test_client):
     try:
         login_data = {
             'username': 'behai_nguyen@hotmail.com',
-            'password': 'password'
+            'password': 'password',
+            'x-expected-format': 'text/html',
         }
         login_response = test_client.post('/auth/token', data=login_data)
 
