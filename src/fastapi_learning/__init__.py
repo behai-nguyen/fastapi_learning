@@ -4,8 +4,30 @@
 
 from typing import Optional
 
+from pydantic import BaseModel
+
 from fastapi.security import OAuth2PasswordBearer
 from fastapi import Request
+
+"""
+Might have to define more when required.
+"""
+APP_SCOPES = {
+    "user:read": "Current logged in user can read their own information only.",
+    "user:write": "Current logged in user can update their own information only.",
+    "admin:read": "Current logged in user can read others' information.",
+    "admin:write": "Current logged in user can update others' information.",
+    "super:*": "Current logged in user has access to all functionalities."
+}
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+    detail: str
+
+class TokenData(BaseModel):
+    user_name: str | None = None
+    scopes: list[str] = []
 
 """
 When we create an instance of the OAuth2PasswordBearer class we pass 
