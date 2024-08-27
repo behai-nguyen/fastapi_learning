@@ -67,7 +67,7 @@ section of the [Tutorial - User Guide Security](https://fastapi.tiangolo.com/tut
 git clone -b v0.3.0 https://github.com/behai-nguyen/fastapi_learning.git
 ```
 
-In the <a href="https://behainguyen.wordpress.com/2024/05/13/python-fastapi-integrating-oauth2-security-with-the-applications-own-authentication-process/" title="Python FastAPI: Integrating OAuth2 Security with the Application’s Own Authentication Process" target="_blank">second post</a> of our <a href="https://fastapi.tiangolo.com/learn/"title="FastAPI" target="_blank">FastAPI</a> learning series, we implemented a placeholder for the application's own authentication process. In this post, we will complete this process by implementing persistent server-side HTTP sessions using the <a href="https://pypi.org/project/starsessions/" title="starsessions" target="_blank">starsessions</a> library and its <a href="https://redis.io/" title="Redis store" target="_blank">Redis store</a> store, as well as extending the <a href="https://fastapi.tiangolo.com/tutorial/security/first-steps/?h=oauth2passwordbearer#fastapis-oauth2passwordbearer" title="OAuth2PasswordBearer" target="_blank">OAuth2PasswordBearer</a> class.
+In the <a href="https://behainguyen.wordpress.com/2024/05/13/python-fastapi-integrating-oauth2-security-with-the-applications-own-authentication-process/" title="Python FastAPI: Integrating OAuth2 Security with the Application’s Own Authentication Process" target="_blank">second post</a> of our <a href="https://fastapi.tiangolo.com/learn/" title="FastAPI" target="_blank">FastAPI</a> learning series, we implemented a placeholder for the application's own authentication process. In this post, we will complete this process by implementing persistent server-side HTTP sessions using the <a href="https://pypi.org/project/starsessions/" title="starsessions" target="_blank">starsessions</a> library and its <a href="https://redis.io/" title="Redis store" target="_blank">Redis store</a> store, as well as extending the <a href="https://fastapi.tiangolo.com/tutorial/security/first-steps/?h=oauth2passwordbearer#fastapis-oauth2passwordbearer" title="OAuth2PasswordBearer" target="_blank">OAuth2PasswordBearer</a> class.
 
 4. [Python FastAPI: Complete Authentication Flow with OAuth2 Security](https://behainguyen.wordpress.com/2024/06/11/python-fastapi-complete-authentication-flow-with-oauth2-security/)
 
@@ -100,6 +100,14 @@ git clone -b v0.7.0 https://github.com/behai-nguyen/fastapi_learning.git
 ```
 
 Continuing with our <a href="https://github.com/behai-nguyen/fastapi_learning" title="Index of the Python FastAPI Complete Series" target="_blank">Python FastAPI learning series</a>, in this installment, we enable database support for <a href="https://www.mysql.com/" title="MySQL database" target="_blank">MySQL</a>, <a href="https://www.postgresql.org/" title="PostgreSQL database" target="_blank">PostgreSQL</a>, and <a href="https://mariadb.com/" title="MariaDB database" target="_blank">MariaDB</a>. We will not add any new functionality; instead, the existing authentication process will check user information from a proper database instead of mock hard-coded data. We will also add a business logic layer responsible for data validation, enforcing business rules, etc.
+
+8. [Python FastAPI: Fixing a Bug in the Authentication Process](https://behainguyen.wordpress.com/2024/08/26/python-fastapi-fixing-a-bug-in-the-authentication-process/)
+
+```
+git clone -b v0.8.0 https://github.com/behai-nguyen/fastapi_learning.git
+```
+
+In the <a href="https://behainguyen.wordpress.com/2024/06/11/python-fastapi-complete-authentication-flow-with-oauth2-security/" title="Python FastAPI: Complete Authentication Flow with OAuth2 Security" target="_blank">fourth post</a> of our <a href="https://github.com/behai-nguyen/fastapi_learning" title="Index of the Python FastAPI Complete Series" target="_blank">Python FastAPI learning series</a>, we introduced a bug in the authentication process. In this post, we describe the bug and discuss how to fix it.
 
 ## License
 [MIT license](http://www.opensource.org/licenses/mit-license.php)
