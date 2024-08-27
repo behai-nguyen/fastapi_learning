@@ -5,13 +5,13 @@
 from typing import Callable, Tuple
 
 from mimetypes import types_map
+
 from fastapi.templating import Jinja2Templates
-from jinja2 import Environment
 from fastapi import Request, Response
 
 from fastapi.routing import APIRoute
 
-from fastapi_learning.common.consts import FORMAT_HEADER
+from fastapi_learning.common.consts import RESPONSE_FORMAT
 
 def valid_logged_in_employee(data: dict):
     """
@@ -28,11 +28,24 @@ templates = Jinja2Templates(directory="src/fastapi_learning/templates")
 templates.env.globals['valid_logged_in_employee'] = valid_logged_in_employee
 
 def json_req(request: Request):
-    if FORMAT_HEADER in request.headers:
-        if request.headers[FORMAT_HEADER] == types_map['.json']:
+    if RESPONSE_FORMAT in request.headers:
+        if request.headers[RESPONSE_FORMAT] == types_map['.json']:
             return True
 
     return False
+
+async def html_req(request: Request):
+    """
+    References: 
+        https://stackoverflow.com/a/64910954
+        https://stackoverflow.com/a/76971147
+    """
+    if RESPONSE_FORMAT in request.headers:
+        if request.headers[RESPONSE_FORMAT] == types_map['.html']:
+            return True
+
+    form_data = await request.form()
+    return form_data.get(RESPONSE_FORMAT) == types_map['.html']
 
 def is_logged_in(request: Request) -> bool:
     """
@@ -57,7 +70,7 @@ class JsonAPIRoute(APIRoute):
         original_route_handler = super().get_route_handler()
 
         async def custom_route_handler(request: Request) -> Response:
-            json_header: Tuple[bytes] = FORMAT_HEADER.encode(), types_map['.json'].encode()
+            json_header: Tuple[bytes] = RESPONSE_FORMAT.encode(), types_map['.json'].encode()
             request.headers.__dict__["_list"].append(json_header)
 
             return await original_route_handler(request)
