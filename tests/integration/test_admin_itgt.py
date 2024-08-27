@@ -23,7 +23,7 @@ from mimetypes import types_map
 from tests import test_main
 
 from fastapi_learning.common.consts import (
-    FORMAT_HEADER,
+    RESPONSE_FORMAT,
     NOT_AUTHENTICATED_MSG,
     INVALID_AUTH_CREDENTIALS_MSG,
 )
@@ -42,7 +42,7 @@ def test_integration_valid_admin_own_detail_json(test_client):
 
     try:
         # Expect JSON response.
-        test_client.headers = {FORMAT_HEADER: types_map['.json']}
+        test_client.headers = {RESPONSE_FORMAT: types_map['.json']}
 
         # Login.
         login_response = login('behai_nguyen@hotmail.com', 'password', test_client)
@@ -109,7 +109,7 @@ def test_integration_not_auth_admin_own_detail_json(test_client):
     test_client.headers.clear()
 
     # Expect JSON response.
-    test_client.headers = {FORMAT_HEADER: types_map['.json']}
+    test_client.headers = {RESPONSE_FORMAT: types_map['.json']}
     
     # No valid login.
     response = test_client.get('/admin/me')
@@ -153,7 +153,7 @@ def test_integration_invalid_credentials_admin_own_detail_json(test_client):
 
     # 'Authorization' is the credential.
     # Expect JSON response.
-    test_client.headers = {FORMAT_HEADER: types_map['.json'],
+    test_client.headers = {RESPONSE_FORMAT: types_map['.json'],
                            'Authorization': 'Bearer behai_'}
     
     # No valid login.
