@@ -2,7 +2,10 @@
 14/05/2024.
 """
 
-from typing import Annotated
+from typing import (
+    Annotated,
+    Union,
+)
 
 from fastapi import (
     APIRouter, 
@@ -18,6 +21,8 @@ from fastapi.responses import (
 )
 
 from bh_apistatus.result_status import ResultStatus
+
+from fastapi_learning import Token
 
 from fastapi_learning.businesses.employees_mgr import EmployeesManager
 
@@ -39,7 +44,10 @@ from fastapi_learning.common.consts import (
 
 from fastapi_learning.common.queue_logging import logger
 
-from . import json_req, JsonAPIRoute
+from . import (
+    html_req, 
+    JsonAPIRoute,
+)
 
 logger = logger()
 
@@ -95,7 +103,7 @@ async def home_page(request: Request) -> HTMLResponse:
 
 @router.post("/token")
 async def login(request: Request,
-    form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Union[Token, None]:
 
     """
     The response from this method can be in either ``JSON`` or 
@@ -132,7 +140,7 @@ async def login(request: Request,
 
     logger.debug('Attempt to log in...')
 
-    def bad_login(op_status: ResultStatus):
+    async def bad_login(op_status: ResultStatus):
         # code 500: invalid email value or password value or database retrieval failed.
         # code 401: email or password does not match.
         match op_status.code:
@@ -140,31 +148,31 @@ async def login(request: Request,
             case status.HTTP_500_INTERNAL_SERVER_ERROR: message = BAD_LOGIN_MSG
             case _: message = LOGIN_ERROR_MSG
 
-        if json_req(request):
+        if await html_req(request):
+            return RedirectResponse(url=f"{router.url_path_for('login_page')}?state={op_status.code}", 
+                                    status_code=status.HTTP_303_SEE_OTHER)        
+        else:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, 
                                 detail=message)
-        else:
-            return RedirectResponse(url=f"{router.url_path_for('login_page')}?state={op_status.code}", 
-                                    status_code=status.HTTP_303_SEE_OTHER)
 
     if is_logged_in(request): 
         logger.debug(LOGGED_IN_SESSION_MSG)
 
-        return {"detail": LOGGED_IN_SESSION_MSG} if json_req(request) \
-            else RedirectResponse(url=router.url_path_for('home_page'), status_code=status.HTTP_303_SEE_OTHER)
+        return RedirectResponse(url=router.url_path_for('home_page'), status_code=status.HTTP_303_SEE_OTHER) \
+            if await html_req(request) else \
+                Token(access_token=request.session["access_token"], token_type="bearer", detail=LOGGED_IN_SESSION_MSG)
 
     op_status = EmployeesManager().login(form_data.username, form_data.password)
 
     if op_status.code != status.HTTP_200_OK:
-        return bad_login(op_status)
+        return await bad_login(op_status)
     
     user_username = op_status.data[0]['email']
 
     request.session["access_token"] = user_username
 
-    return {"access_token": user_username, "token_type": "bearer"} \
-        if json_req(request) \
-        else RedirectResponse(url=router.url_path_for('home_page'), status_code=status.HTTP_303_SEE_OTHER)
+    return RedirectResponse(url=router.url_path_for('home_page'), status_code=status.HTTP_303_SEE_OTHER) \
+        if await html_req(request) else Token(access_token=user_username, token_type="bearer", detail="")
 
 @router.post("/logout", response_class=HTMLResponse)
 async def logout(request: Request):
