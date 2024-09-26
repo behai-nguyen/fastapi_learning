@@ -22,6 +22,8 @@ from mimetypes import types_map
 
 from tests import test_main
 
+from fastapi_learning.common.jwt_utils import create_access_token
+
 from fastapi_learning.common.consts import (
     RESPONSE_FORMAT,
     NOT_AUTHENTICATED_MSG,
@@ -151,10 +153,12 @@ def test_integration_invalid_credentials_admin_own_detail_json(test_client):
 
     test_client.headers.clear()
 
+    access_token = create_access_token(data={"sub": "behai_"})
+
     # 'Authorization' is the credential.
     # Expect JSON response.
     test_client.headers = {RESPONSE_FORMAT: types_map['.json'],
-                           'Authorization': 'Bearer behai_'}
+                           'Authorization': f'Bearer {access_token}'}
     
     # No valid login.
     response = test_client.get('/admin/me')

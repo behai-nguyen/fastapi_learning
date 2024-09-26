@@ -21,6 +21,9 @@ import pytest
 
 from fastapi import status as http_status
 
+from fastapi_learning import TokenData
+from fastapi_learning.common.jwt_utils import decode_access_token
+
 from fastapi_learning.common.consts import (
     RESPONSE_FORMAT,
     LOGIN_PAGE_TITLE,
@@ -174,7 +177,11 @@ def test_integration_valid_login_json(test_client):
         assert login_response.status_code == http_status.HTTP_200_OK
 
         status = login_response.json()
-        assert status['access_token'] == 'behai_nguyen@hotmail.com'
+
+        token_data = decode_access_token(status['access_token'])
+        assert isinstance(token_data, TokenData) == True
+
+        assert token_data.user_name == 'behai_nguyen@hotmail.com'
         assert status['token_type'] == 'bearer'
 
     finally:
