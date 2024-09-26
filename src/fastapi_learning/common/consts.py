@@ -18,6 +18,7 @@ NOT_LOGGED_IN_SESSION_MSG = "This session has not been logged in before"
 LOGGED_IN_SESSION_MSG = "Already logged in"
 
 NOT_AUTHENTICATED_MSG = "Not authenticated"
+INVALID_CREDENTIALS_MSG = "Could not validate credentials"
 INVALID_AUTH_CREDENTIALS_MSG = "Invalid authentication credentials"
 
 ALREADY_LOGGED_IN_MSG = "Already logged in. Redirect to home page"
