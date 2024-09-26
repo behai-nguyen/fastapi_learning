@@ -109,6 +109,14 @@ git clone -b v0.8.0 https://github.com/behai-nguyen/fastapi_learning.git
 
 In the <a href="https://behainguyen.wordpress.com/2024/06/11/python-fastapi-complete-authentication-flow-with-oauth2-security/" title="Python FastAPI: Complete Authentication Flow with OAuth2 Security" target="_blank">fourth post</a> of our <a href="https://github.com/behai-nguyen/fastapi_learning" title="Index of the Python FastAPI Complete Series" target="_blank">Python FastAPI learning series</a>, we introduced a bug in the authentication process. In this post, we describe the bug and discuss how to fix it.
 
+9. [Python FastAPI: Implementing JSON Web Token](https://behainguyen.wordpress.com/2024/09/26/python-fastapi-implementing-json-web-token/)
+
+```
+git clone -b v0.9.0 https://github.com/behai-nguyen/fastapi_learning.git
+```
+
+Continuing with our <a href="https://github.com/behai-nguyen/fastapi_learning" title="Index of the Python FastAPI Complete Series" target="_blank">Python FastAPI learning series</a>, we will implement proper JSON Web Token (JWT) authentication as discussed in <a href="https://fastapi.tiangolo.com/tutorial/security/oauth2-jwt/" title="OAuth2 with Password (and hashing), Bearer with JWT tokens" target="_blank">the official tutorial</a>, with a few minor tweaks of our own.
+
 ## License
 [MIT license](http://www.opensource.org/licenses/mit-license.php)
 and the [GPL license](http://www.gnu.org/licenses/gpl.html).
