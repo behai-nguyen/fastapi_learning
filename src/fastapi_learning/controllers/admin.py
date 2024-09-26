@@ -26,6 +26,8 @@ from fastapi_learning.models.employees import LoggedInEmployee
 
 from fastapi_learning.businesses.employees_mgr import EmployeesManager
 
+from fastapi_learning.common.jwt_utils import decode_access_token
+
 from fastapi_learning.common.consts import (
     INVALID_AUTH_CREDENTIALS_MSG,
     NOT_AUTHENTICATED_MSG,
@@ -60,9 +62,15 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=NOT_AUTHENTICATED_MSG,
             headers={"WWW-Authenticate": "Bearer"},
-        )        
+        )
+    
+    token_data = decode_access_token(token)
+    
+    if isinstance(token_data, HTTPException):
+        return token_data
 
-    op_status = EmployeesManager().select_by_email(token)
+    op_status = EmployeesManager().select_by_email(token_data.user_name)
+
     # Enables this to simulate token became invalid after logged in.
     # op_status = EmployeesManager().select_by_email('token@gmail.com')
     if op_status.code != status.HTTP_200_OK:
