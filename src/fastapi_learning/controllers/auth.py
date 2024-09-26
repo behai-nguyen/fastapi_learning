@@ -31,6 +31,8 @@ from fastapi_learning.controllers import (
     templates,
 )
 
+from fastapi_learning.common.jwt_utils import create_access_token
+
 from fastapi_learning.common.consts import (
     LOGIN_PAGE_TITLE,
     HOME_PAGE_TITLE,
@@ -167,12 +169,12 @@ async def login(request: Request,
     if op_status.code != status.HTTP_200_OK:
         return await bad_login(op_status)
     
-    user_username = op_status.data[0]['email']
+    access_token = create_access_token(data={"sub": op_status.data[0]['email']})
 
-    request.session["access_token"] = user_username
+    request.session["access_token"] = access_token
 
     return RedirectResponse(url=router.url_path_for('home_page'), status_code=status.HTTP_303_SEE_OTHER) \
-        if await html_req(request) else Token(access_token=user_username, token_type="bearer", detail="")
+        if await html_req(request) else Token(access_token=access_token, token_type="bearer", detail="")
 
 @router.post("/logout", response_class=HTMLResponse)
 async def logout(request: Request):
