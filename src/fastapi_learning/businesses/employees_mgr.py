@@ -39,6 +39,36 @@ from fastapi_learning.common.consts import (
     INVALID_USERNAME_PASSWORD_MSG,
 )
 
+# Proper implementation might turn this into a database table.
+MOCK_USER_SCOPES = [
+    {
+        'user_name': '*', 
+        'scopes': ['user:read']
+    },
+    {
+        'user_name': 'moss.shanbhogue.10045@gmail.com',
+        'scopes': []
+    },
+    {
+        'user_name': 'behai_nguyen@hotmail.com', 
+        'scopes': ['user:read', 'user:write']
+    },
+    {
+        'user_name': 'kyoichi.maliniak.10005@gmail.com', 
+        'scopes': ['admin:read', 'admin:write']
+    },
+    {
+        'user_name': 'mary.sluis.10011@gmail.com', 
+        'scopes': ['super:*']
+    }
+]
+
+def mock_get_user_scopes(email: str) -> list:
+    res = [item for item in MOCK_USER_SCOPES if item['user_name'] == email]
+
+    return res[0]['scopes'] if len(res) > 0 else \
+        [item for item in MOCK_USER_SCOPES if item['user_name'] == '*'][0]['scopes']
+
 class EmployeesManager(AppBusiness):
     """    
     Validate submitted data.
@@ -129,7 +159,18 @@ class EmployeesManager(AppBusiness):
                                    text=INVALID_USERNAME_PASSWORD_MSG)
             
             # raise Exception("Test login exception!")
-            
+
+            status = status.add_data(mock_get_user_scopes(email), 'scopes')
+
+            """ 
+            # The status dictionary variable can be dumped out using the 
+            # code below.
+            from bh_utils.json_funcs import dumps
+            f = open( 'test.json', 'w' )
+            f.write( dumps(status.as_dict()) )
+            f.close()
+            """
+
             # Return retrieved and match employee.
             return status
             
