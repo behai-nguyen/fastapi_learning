@@ -8,10 +8,13 @@ from fastapi import (
     APIRouter, 
     Depends,     
     HTTPException, 
+    Security,
     status,
     Request,
     status,
 )
+
+from fastapi.security import SecurityScopes
 
 from fastapi_learning import oauth2_scheme
 
@@ -29,12 +32,14 @@ from fastapi_learning.businesses.employees_mgr import EmployeesManager
 from fastapi_learning.common.jwt_utils import decode_access_token
 
 from fastapi_learning.common.consts import (
-    INVALID_AUTH_CREDENTIALS_MSG,
     NOT_AUTHENTICATED_MSG,
+    INVALID_AUTH_CREDENTIALS_MSG,
     ME_PAGE_TITLE,
+    INVALID_PERMISSIONS_MSG,
 )
 
 from fastapi_learning.common.queue_logging import logger
+from fastapi_learning.common.scope_utils import has_required_permissions
 
 from . import json_req, JsonAPIRoute
 
@@ -50,19 +55,27 @@ api_router = APIRouter(route_class=JsonAPIRoute,
     tags=["API"],
 )
 
-async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
+async def get_current_user(
+        security_scopes: SecurityScopes,
+        token: Annotated[str, Depends(oauth2_scheme)]):
+    if security_scopes.scopes:
+        authenticate_value = f'Bearer scope="{security_scopes.scope_str}"'
+    else:
+        authenticate_value = "Bearer"
+
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail=NOT_AUTHENTICATED_MSG,
+        headers={"WWW-Authenticate": authenticate_value},
+    )
+    
     # OAuth2PasswordBearer auto_error has been set to False. 
     # The return value is None instead of an HTTPException.
     # This is the same exception raised by OAuth2PasswordBearer. 
     # We are taking control of the authentication flow.    
     if token == None:
-        logger.debug('No token.')
-
-        return HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=NOT_AUTHENTICATED_MSG,
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        logger.debug(NOT_AUTHENTICATED_MSG)
+        return credentials_exception
     
     token_data = decode_access_token(token)
     
@@ -74,25 +87,22 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
     # Enables this to simulate token became invalid after logged in.
     # op_status = EmployeesManager().select_by_email('token@gmail.com')
     if op_status.code != status.HTTP_200_OK:
-        logger.debug('No user.')
+        logger.debug(INVALID_AUTH_CREDENTIALS_MSG)
+        credentials_exception.detail = INVALID_AUTH_CREDENTIALS_MSG
+        return credentials_exception
 
-        return HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=INVALID_AUTH_CREDENTIALS_MSG,
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+    if not has_required_permissions(security_scopes.scopes, token_data.scopes): 
+        logger.debug(INVALID_PERMISSIONS_MSG)
+        credentials_exception.detail = INVALID_PERMISSIONS_MSG
+        return credentials_exception
 
     return LoggedInEmployee(**op_status.data[0])
-    
-async def get_current_active_user(
-    current_user: Annotated[LoggedInEmployee, Depends(get_current_user)],
-):
-    return current_user
 
 @router.get("/me")
 async def read_users_me(
     request: Request,
-    current_user: Annotated[LoggedInEmployee, Depends(get_current_active_user)]
+    current_user: Annotated[LoggedInEmployee, 
+                            Security(get_current_user, scopes=["user:read"])]
 ):
     """
     This returns the currently logged-in user’s information in either 
@@ -113,8 +123,7 @@ async def read_users_me(
     When an error occurs, the return format is:
 
     - ``JSON``: The response ``status_code`` is ``HTTP_401_UNAUTHORIZED``. 
-      The ``detail`` field value is either ``NOT_AUTHENTICATED_MSG`` 
-      or ``INVALID_AUTH_CREDENTIALS_MSG``.
+      The ``detail`` field value is a text message.
 
     - ``HTML``: The response ``status_code`` is ``HTTP_200_OK``. The 
       HTML text is the login page with the message ``LOG_IN_CONTINUE_MSG``.
@@ -153,7 +162,8 @@ async def read_users_me(
 @api_router.get("/me")
 async def read_users_me_api(
     request: Request,
-    current_user: Annotated[LoggedInEmployee, Depends(get_current_active_user)]
+    current_user: Annotated[LoggedInEmployee, 
+                            Security(get_current_user, scopes=["user:read"])]
 ):
     """
     This endpoint is equivalent to ``/admin/me``, with the incoming request 
