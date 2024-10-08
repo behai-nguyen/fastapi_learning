@@ -166,10 +166,18 @@ async def login(request: Request,
 
     op_status = EmployeesManager().login(form_data.username, form_data.password)
 
+    """
+    from bh_utils.json_funcs import dumps
+    f = open( 'op_status.json', 'w' )
+    f.write( dumps(op_status.as_dict()) )
+    f.close()
+    """
+    
     if op_status.code != status.HTTP_200_OK:
         return await bad_login(op_status)
     
-    access_token = create_access_token(data={"sub": op_status.data[0]['email']})
+    access_token = create_access_token(data={'sub': op_status.data[0]['email'],
+                                             'scopes': op_status.data.scopes})
 
     request.session["access_token"] = access_token
 
