@@ -117,6 +117,14 @@ git clone -b v0.9.0 https://github.com/behai-nguyen/fastapi_learning.git
 
 Continuing with our <a href="https://github.com/behai-nguyen/fastapi_learning" title="Index of the Python FastAPI Complete Series" target="_blank">Python FastAPI learning series</a>, we will implement proper JSON Web Token (JWT) authentication as discussed in <a href="https://fastapi.tiangolo.com/tutorial/security/oauth2-jwt/" title="OAuth2 with Password (and hashing), Bearer with JWT tokens" target="_blank">the official tutorial</a>, with a few minor tweaks of our own.
 
+10. [Python FastAPI: Implementing OAuth2 Scopes Part 01](https://behainguyen.wordpress.com/2024/10/08/python-fastapi-implementing-oauth2-scopes-part-01/)
+
+```
+git clone -b v0.10.0 https://github.com/behai-nguyen/fastapi_learning.git
+```
+
+In this part of our <a href="https://github.com/behai-nguyen/fastapi_learning" title="Index of the Python FastAPI Complete Series" target="_blank">Python FastAPI learning series</a>, we implement OAuth2 scopes. Our implementation is based on the advanced official tutorial on <a href="https://fastapi.tiangolo.com/advanced/security/oauth2-scopes/" title="OAuth2 scopes" target="_blank">OAuth2 scopes</a>, with some variations of our own.
+
 ## License
 [MIT license](http://www.opensource.org/licenses/mit-license.php)
 and the [GPL license](http://www.gnu.org/licenses/gpl.html).
