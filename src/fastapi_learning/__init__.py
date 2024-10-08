@@ -13,12 +13,35 @@ from fastapi import Request
 Might have to define more when required.
 """
 APP_SCOPES = {
-    "user:read": "Current logged in user can read their own information only.",
-    "user:write": "Current logged in user can update their own information only.",
-    "admin:read": "Current logged in user can read others' information.",
-    "admin:write": "Current logged in user can update others' information.",
-    "super:*": "Current logged in user has access to all functionalities."
+    'user:read': 'Current logged in user can read their own information only.',
+    'user:write': 'Current logged in user can update their own information only.',
+    'admin:read': 'Current logged in user can read others\' information.',
+    'admin:write': 'Current logged in user can update others\' information.',
+    'super:*': 'Current logged in user has access to all functionalities.'
 }
+
+APP_SCOPE_DEPENDENCIES = [
+    {
+        'scope': 'user:read', 
+        'included_scopes': []
+    },
+    {
+        'scope': 'user:write', 
+        'included_scopes': ['user:read']
+    },
+    {
+        'scope': 'admin:read', 
+        'included_scopes': ['user:read']
+    },
+    {
+        'scope': 'admin:write', 
+        'included_scopes': ['user:read', 'user:write', 'admin:read']
+    },
+    {
+        'scope': 'super:*', 
+        'included_scopes': ['user:read', 'user:write', 'admin:read', 'admin:write']
+    }
+]
 
 class Token(BaseModel):
     access_token: str
@@ -49,3 +72,10 @@ class OAuth2PasswordBearerRedis(OAuth2PasswordBearer):
         return await super().__call__(request)
     
 oauth2_scheme = OAuth2PasswordBearerRedis(tokenUrl="/auth/token", auto_error=False)
+
+# Pass in scopes=APP_SCOPES to list all scopes on 
+# the Swagger Authorize screen.
+# 
+# oauth2_scheme = OAuth2PasswordBearerRedis(tokenUrl="/auth/token", 
+#                                          auto_error=False,
+#                                          scopes=APP_SCOPES)
