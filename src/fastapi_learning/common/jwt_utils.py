@@ -41,7 +41,7 @@ def decode_access_token(token: str) -> Union[TokenData, HTTPException]:
         if username is None:
             return credentials_exception
         
-        return TokenData(user_name=username)
+        return TokenData(user_name=username, scopes=payload.get("scopes", []))
 
     except InvalidTokenError:
         return credentials_exception
