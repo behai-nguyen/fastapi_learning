@@ -21,6 +21,8 @@ from fastapi_learning import oauth2_scheme
 from fastapi.responses import RedirectResponse
 
 from fastapi_learning.controllers import (
+    credentials_exception,
+    attempt_decoding_access_token,
     is_logged_in,
     templates,
 )
@@ -29,10 +31,7 @@ from fastapi_learning.models.employees import LoggedInEmployee
 
 from fastapi_learning.businesses.employees_mgr import EmployeesManager
 
-from fastapi_learning.common.jwt_utils import decode_access_token
-
 from fastapi_learning.common.consts import (
-    NOT_AUTHENTICATED_MSG,
     INVALID_AUTH_CREDENTIALS_MSG,
     ME_PAGE_TITLE,
     INVALID_PERMISSIONS_MSG,
@@ -63,21 +62,9 @@ async def get_current_user(
     else:
         authenticate_value = "Bearer"
 
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail=NOT_AUTHENTICATED_MSG,
-        headers={"WWW-Authenticate": authenticate_value},
-    )
+    creds_exception = credentials_exception(authenticate_value=authenticate_value)
     
-    # OAuth2PasswordBearer auto_error has been set to False. 
-    # The return value is None instead of an HTTPException.
-    # This is the same exception raised by OAuth2PasswordBearer. 
-    # We are taking control of the authentication flow.    
-    if token == None:
-        logger.debug(NOT_AUTHENTICATED_MSG)
-        return credentials_exception
-    
-    token_data = decode_access_token(token)
+    token_data = attempt_decoding_access_token(token)
     
     if isinstance(token_data, HTTPException):
         return token_data
@@ -88,13 +75,13 @@ async def get_current_user(
     # op_status = EmployeesManager().select_by_email('token@gmail.com')
     if op_status.code != status.HTTP_200_OK:
         logger.debug(INVALID_AUTH_CREDENTIALS_MSG)
-        credentials_exception.detail = INVALID_AUTH_CREDENTIALS_MSG
-        return credentials_exception
+        creds_exception.detail = INVALID_AUTH_CREDENTIALS_MSG
+        return creds_exception
 
     if not has_required_permissions(security_scopes.scopes, token_data.scopes): 
         logger.debug(INVALID_PERMISSIONS_MSG)
-        credentials_exception.detail = INVALID_PERMISSIONS_MSG
-        return credentials_exception
+        creds_exception.detail = INVALID_PERMISSIONS_MSG
+        return creds_exception
 
     return LoggedInEmployee(**op_status.data[0])
 
