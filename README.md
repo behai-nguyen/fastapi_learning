@@ -125,6 +125,14 @@ git clone -b v0.10.0 https://github.com/behai-nguyen/fastapi_learning.git
 
 In this part of our <a href="https://github.com/behai-nguyen/fastapi_learning" title="Index of the Python FastAPI Complete Series" target="_blank">Python FastAPI learning series</a>, we implement OAuth2 scopes. Our implementation is based on the advanced official tutorial on <a href="https://fastapi.tiangolo.com/advanced/security/oauth2-scopes/" title="OAuth2 scopes" target="_blank">OAuth2 scopes</a>, with some variations of our own.
 
+11. [Python FastAPI: OAuth2 Scopes Part 02 - UI Elements and User-Assigned Scopes](https://behainguyen.wordpress.com/2024/10/19/python-fastapi-oauth2-scopes-part-02-ui-elements-and-user-assigned-scopes/)
+
+```
+git clone -b v0.11.0 https://github.com/behai-nguyen/fastapi_learning.git
+```
+
+In the <a href="https://behainguyen.wordpress.com/2024/10/08/python-fastapi-implementing-oauth2-scopes-part-01/" title="Python FastAPI: Implementing OAuth2 Scopes Part 01" target="_blank">previous post</a>, we implemented <a href="https://fastapi.tiangolo.com/advanced/security/oauth2-scopes/" title="OAuth2 scopes" target="_blank">OAuth2 scopes</a> for endpoint handler methods. This post extends that implementation to include <strong>UI elements</strong> — components that send HTTP requests to the server application.
+
 ## License
 [MIT license](http://www.opensource.org/licenses/mit-license.php)
 and the [GPL license](http://www.gnu.org/licenses/gpl.html).
