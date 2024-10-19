@@ -20,6 +20,8 @@ from fastapi.responses import (
     RedirectResponse,
 )
 
+from fastapi_learning import oauth2_scheme
+
 from bh_apistatus.result_status import ResultStatus
 
 from fastapi_learning import Token
@@ -27,6 +29,7 @@ from fastapi_learning import Token
 from fastapi_learning.businesses.employees_mgr import EmployeesManager
 
 from fastapi_learning.controllers import (
+    attempt_decoding_access_token,
     is_logged_in,
     templates,
 )
@@ -81,11 +84,22 @@ def __login_page(request: Request, state: int=0) -> HTMLResponse:
     return templates.TemplateResponse(request=request, 
                 name="auth/login.html", context=__login_page_context(state))
 
-def __home_page(request: Request) -> HTMLResponse: 
+def __home_page(request: Request,
+                token: Annotated[str, Depends(oauth2_scheme)]) -> HTMLResponse: 
     logger.debug('Delivering the home page.')
 
-    return templates.TemplateResponse(request=request, 
-                name="auth/home.html", context={"title": HOME_PAGE_TITLE})
+    token_data = attempt_decoding_access_token(token)
+
+    data = {}
+    if isinstance(token_data, HTTPException):
+        data.update({"status_code": token_data.status_code, "detail": token_data.detail})
+    else:
+        data.update({"user_scopes": token_data.scopes})
+
+    # data.update({"status_code": 401, "detail": "Failed test..."})
+
+    return templates.TemplateResponse(request=request, name="auth/home.html", 
+                                      context={"title": HOME_PAGE_TITLE, "data": data})
 
 @router.get("/login", response_model=None)
 async def login_page(request: Request, state: int = 0) -> HTMLResponse:
@@ -96,12 +110,13 @@ async def login_page(request: Request, state: int = 0) -> HTMLResponse:
         else __login_page(request=request, state=state)
 
 @router.get("/home", response_model=None)
-async def home_page(request: Request) -> HTMLResponse:
+async def home_page(request: Request,
+                    token: Annotated[str, Depends(oauth2_scheme)]) -> HTMLResponse:
     logger.debug('Attempt to deliver the home page.')
 
     return RedirectResponse(url=f"{router.url_path_for('login_page')}?state=2") \
         if not is_logged_in(request) \
-        else __home_page(request=request)
+        else __home_page(request=request, token=token)
 
 @router.post("/token")
 async def login(request: Request,
