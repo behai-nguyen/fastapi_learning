@@ -4,6 +4,22 @@
 
 {% block content %}
 
+{% if data.status_code is defined and data.detail is defined %}
+
+<div class="row">
+    <div class="col">
+        <h2>It's on me... Please contact support, quoting the below message:</h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col">
+        <h2 class="text-danger fw-bold">{{ data.detail }}</h2>
+    </div>
+</div>
+
+{% else %}
+
 <script>
 	function bindMyInfoJSON() {
 		$( '#meBtn' ).on( 'click', function( event ) {
@@ -29,16 +45,25 @@
 	});
 </script>
 
+{% set required_scopes = ['user:read'] %}
+
+{% set disabled_str = '' %}
+{% if not enable_no_scopes_ui() %}
+{%     if not has_required_scopes(required_scopes, data['user_scopes']) %}
+{%         set disabled_str = 'disabled' %}
+{%     endif %}
+{% endif %}
+
 <div>   
     <h1 class="h3 mb-3 fw-normal">Home</h1>
 
     <div class="row">
         <div class="col-2">
-            <button type="button" id="meBtn" class="btn btn-link">My Info as JSON</button>
+            <button type="button" id="meBtn" class="btn btn-link" {{disabled_str}}>My Info as JSON</button>
         </div>
         <div class="col-2">
             <form method="GET" action="/admin/me" id="meForm">
-                <button type="submit" class="btn btn-primary">My Info</button>
+                <button type="submit" class="btn btn-primary" {{disabled_str}}>My Info</button>
             </form>
         </div>
         <div class="col-2">
@@ -48,5 +73,6 @@
         </div>
     </div>
 </div>
+{% endif %}
 
 {% endblock %}
