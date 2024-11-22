@@ -50,6 +50,7 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     user_name: str | None = None
+    user_number: int | None = None
     scopes: list[str] = []
 
 """
