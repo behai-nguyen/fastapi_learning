@@ -20,6 +20,7 @@ from bh_database.core import Database
 # import this, i.e. test_main.
 # 
 import main as test_main
+from fastapi_learning.models.employees import Employees
 
 load_dotenv( os.path.join(os.getcwd(), '.env') )
 
@@ -57,3 +58,17 @@ def login(username: str, password: str,
     assert response.status_code == HTTPStatus.OK.value
     
     return response
+
+def delete_employee(partial_last_name: str, partial_first_name: str):
+    Employees.begin_transaction(Employees)
+
+    employees = Employees.session.query( Employees ).filter( 
+        Employees.last_name.ilike(partial_last_name),
+        Employees.first_name.ilike(partial_first_name)
+    ).all()
+
+    if ( employees != None ):
+        for emp in employees:
+            Employees.session.delete( emp )
+
+    Employees.commit_transaction(Employees)
