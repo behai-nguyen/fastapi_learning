@@ -11,6 +11,8 @@ from http import HTTPStatus
 
 from argon2 import PasswordHasher
 
+from bh_database.constant import BH_RECORD_STATUS_MODIFIED
+
 from bh_apistatus.result_status import (
     ResultStatus,
     make_500_status,
@@ -32,11 +34,16 @@ from .base_validation import validate
 from .employees_validation import (
     SearchByEmailForm,
     LoginForm,
+    SearchByNameForm,
+    UpdateEmployeeForm,
+    AddEmployeeForm,
 )
 
 from fastapi_learning.common.consts import (
     EMAIL_NO_MATCHING_MSG,
     INVALID_USERNAME_PASSWORD_MSG,
+    ERR_INVALID_SEARCH_EMP_NUMBER_MSG,
+    DUPLICATE_EMAIL_MSG,
 )
 
 # Proper implementation might turn this into a database table.
@@ -52,10 +59,18 @@ MOCK_USER_SCOPES = [
     {
         'user_name': 'behai_nguyen@hotmail.com', 
         'scopes': ['user:read', 'user:write']
+    },    
+    {
+        'user_name': 'nidapan.samarati.262556@gmail.com', 
+        'scopes': ['user:read']
     },
     {
         'user_name': 'kyoichi.maliniak.10005@gmail.com', 
         'scopes': ['admin:read', 'admin:write']
+    },    
+    {
+        'user_name': 'weijing.showalter.67000@gmail.com', 
+        'scopes': ['admin:read']
     },
     {
         'user_name': 'mary.sluis.10011@gmail.com', 
@@ -119,7 +134,33 @@ class EmployeesManager(AppBusiness):
         except Exception as e:
             logger().exception(str(e))
             return make_500_status(str(e))
+
+    def select_by_partial_last_name_and_first_name(self, 
+            last_name: str, first_name: str) -> ResultStatus:        
+        try:
+            search_data = {'last_name': last_name, 'first_name': first_name}
+            status = validate(search_data, [SearchByNameForm])
+            if (status.code != HTTPStatus.OK.value): return status
+
+            return Employees().select_by_partial_last_name_and_first_name(
+                last_name, first_name)
+
+        except Exception as e:
+            logger.exception(str(e))
+            return make_500_status(str(e))
         
+    def select_by_employee_number(self, emp_no: int) -> ResultStatus:
+        try:
+            # 10001 is from the database.
+            if emp_no < 10001:
+                return make_500_status(ERR_INVALID_SEARCH_EMP_NUMBER_MSG)
+
+            return Employees().select_by_employee_number(emp_no)
+
+        except Exception as e:
+            logger.exception(str(e))
+            return make_500_status(str(e))
+                
     def login(self, email: str, password: str) -> ResultStatus:
         """
         Returned codes are: 200, 401 or 500.
@@ -151,7 +192,7 @@ class EmployeesManager(AppBusiness):
             
             # Passwords don't match: return error status.            
             try:
-                PasswordHasher().verify(status.data[0]['password'], password)                
+                PasswordHasher().verify(status.data[0]['password'], password)
             except Exception as e:
                 logger().debug(str(e))
 
@@ -181,12 +222,6 @@ class EmployeesManager(AppBusiness):
         finally:
             logger().debug('Exited.')
 
-    """
-    Write to database methods.
-
-    31/07/2024: THESE ARE NOT IN USE IN THIS REVISION.
-    """
-        
     def _preprocess_write_data(self):
         """ Override. 
         
@@ -200,7 +235,9 @@ class EmployeesManager(AppBusiness):
         """
 
         self.__employee_data = {}
-        self._param_to_record(self.__employee_data, 'empNo', 'emp_no')
+        self._param_to_record(self.__employee_data, 'empNo', 'emp_no')        
+        self._param_to_record(self.__employee_data, 'email', 'email')
+        self._param_to_record(self.__employee_data, 'password', 'password')
         self._param_to_record(self.__employee_data, 'birthDate', 'birth_date')
         self._param_to_record(self.__employee_data, 'firstName', 'first_name')
         self._param_to_record(self.__employee_data, 'lastName', 'last_name')
@@ -213,20 +250,68 @@ class EmployeesManager(AppBusiness):
         return super()._preprocess_write_data()
 
     def _validate(self):
-        """ Override. """
+        """ Override. 
 
+        Applies basic validation on input data.
+
+        Then for a new record, verify that email is unique. Note there is no database 
+        constraint for unique email.
+
+        For existing records, i.e. write update, ignore 'email' and 'password' columns.
+        That is, 'email' and 'password' columns don't get update on normal update.
+
+        For new records, inserting, employee number can be blank, None or absent, 
+        'email' and 'password' must have values.
+
+        For existing records, updating, employee number must have value, 'email' and 
+        'password' can be absent.
+        """
+
+        def __make_error(err_msg: str) -> ResultStatus:
+            error = {"id": 'email', "label": 'Email', "errors": [err_msg]}
+            return make_500_status('').add_data([error], name='errors')
+        
+        # Select appropriate validation form.
+        validation_form, existing_emp = (UpdateEmployeeForm, True) if \
+            self.__employee_data[BH_REC_STATUS_FIELDNAME] == BH_RECORD_STATUS_MODIFIED \
+            else (AddEmployeeForm, False)
+        
         # Note: 'birth_date' and 'hire_date' are in Australian 
         # date format. That is, dd/mm/yyyy.
-        # return validate(self.__employee_data, [EditorForm])
-        # TO_DO: to be implemented.
-        return False
+        status = validate(self.__employee_data, [validation_form])
+        # Fails basic input data validations. Proceeds no further.
+        if status.code == HTTPStatus.INTERNAL_SERVER_ERROR.value: return status
 
-    def _pre_write(self):        
+        # For write update, i.e., updating an existing employee, ignore 'email' 
+        # and 'password' columns.
+        if existing_emp: return status
+
+        # Retrieve based on email.
+        status = Employees().count_by_email(self.__employee_data['email'])
+
+        # Failed to count email. Return error status.
+        if status.code != HTTPStatus.OK.value: return __make_error(status.text)
+
+        # Duplicate email. Return error status.
+        if status.data[0]['_count_'] > 0: return __make_error(DUPLICATE_EMAIL_MSG)
+
+        # Successful.
+        return make_status()
+
+    def _pre_write(self):
         """ Override. """
 
         # Australian date to MySQL date.
         self.__employee_data['birth_date'] = australian_date_to_iso_datetime(self.__employee_data['birth_date'], False)
         self.__employee_data['hire_date'] = australian_date_to_iso_datetime(self.__employee_data['hire_date'], False)
+
+        # For write update, i.e., updating an existing employee, don't update 'email' 
+        # and 'password' columns. 
+        if self.__employee_data[BH_REC_STATUS_FIELDNAME] == BH_RECORD_STATUS_MODIFIED:
+            self.__employee_data.pop('email', None)
+            self.__employee_data.pop('password', None)
+        else:
+            self.__employee_data['password'] = PasswordHasher().hash(self.__employee_data['password'])
 
         return super()._pre_write()
 
