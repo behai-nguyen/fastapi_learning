@@ -5,6 +5,10 @@ Test EmployeesManager business component.
 venv\Scripts\pytest.exe -m employees_mgr
 venv\Scripts\pytest.exe -k _business_ -v
 
+venv\Scripts\pytest.exe -k <test method name>
+E.g.: 
+    venv\Scripts\pytest.exe -k test_business_write_employee_invalid
+
 Use --capture=no to enable print output. I.e.:
 
 venv\Scripts\pytest.exe -m employees_mgr --capture=no
@@ -20,11 +24,22 @@ from fastapi_learning.businesses.employees_validation import (
     WWW_EMAIL_MSG,
     EMAIL_MSG,
     PASSWORD_MSG,
+    BIRTH_DATE_MSG,
+    LAST_NAME_MSG,
+    FIRST_NAME_MSG,
+    GENDER_MSG,
+    HIRE_DATE_MSG,
+    HIRE_DATE_AFTER_BIRTH_DATE_MSG,    
 )
 
 from fastapi_learning.businesses.employees_mgr import EmployeesManager
 
-from fastapi_learning.common.consts import INVALID_USERNAME_PASSWORD_MSG
+from fastapi_learning.common.consts import (
+    INVALID_USERNAME_PASSWORD_MSG,
+    DUPLICATE_EMAIL_MSG,
+)
+
+from tests import delete_employee
 
 @pytest.mark.employees_mgr
 def test_business_select_by_email_invalid_1(app):
@@ -270,52 +285,77 @@ def test_business_login_valid(app):
     assert status.data[0]['gender'] == 'M'
     assert status.data[0]['hire_date'] == '08/04/1987'
 
-"""
 @pytest.mark.employees_mgr
-def test_business_write_employee_invalid(app):
+def test_business_write_employee_invalid_data(app):
+    """
+    Test input data validation.
+    """    
+    employee = {}
+    # This is a new record, we don't have to specify None for primary key.
+    employee['empNo'] = None
+    employee['email'] = ''
+    employee['password'] = ''
+    employee['birthDate'] = ''
+    employee['firstName'] = ''
+    employee['lastName'] = ''
+    employee['gender'] = ''
+    employee['hireDate'] = ''
+
+    status = EmployeesManager().write_to_database(employee)
+
+    # print("\nstatus.as_dict(): ", status.as_dict(), "\n")
+
+    assert status.code == HTTPStatus.INTERNAL_SERVER_ERROR.value
+    assert hasattr(status, 'data') == True
+    assert status.data != None
+    assert hasattr(status.data, 'errors') == True
+    assert len(status.data.errors) == 7
+
+    error = status.data.errors[ 0 ]
+    assert error[ 'id' ] == 'birth_date'
+    assert error[ 'label' ] == 'Birth Date'
+    assert len(error[ 'errors' ]) == 1
+    assert error[ 'errors' ][ 0 ] == BIRTH_DATE_MSG
+
+    error = status.data.errors[ 1 ]
+    assert error[ 'errors' ][ 0 ] == FIRST_NAME_MSG
+
+    error = status.data.errors[ 2 ]
+    assert error[ 'errors' ][ 0 ] == LAST_NAME_MSG
+
+    error = status.data.errors[ 3 ]
+    assert error[ 'errors' ][ 0 ] == GENDER_MSG
+
+    error = status.data.errors[ 4 ]
+    assert error[ 'errors' ][ 0 ] == HIRE_DATE_MSG
+
+    error = status.data.errors[ 5 ]
+    assert error[ 'id' ] == 'email'
+    assert error[ 'label' ] == 'Email'
+    assert len(error[ 'errors' ]) == 2
+    assert error[ 'errors' ][ 0 ] == WWW_EMAIL_MSG
+    assert error[ 'errors' ][ 1 ] == EMAIL_MSG
+
+    error = status.data.errors[ 6 ]
+    assert error[ 'id' ] == 'password'
+    assert error[ 'label' ] == 'Password'
+    assert len(error[ 'errors' ]) == 1
+    assert error[ 'errors' ][ 0 ] == PASSWORD_MSG
+
+@pytest.mark.employees_mgr
+def test_business_write_employee_invalid_hire_date(app):
+    """
+    Test input data validation.
+    Hire date is before birth date: being hired before being born!
+    """
     try:
         delete_employee('Do%', 'Be %')
 
         employee = {}
         # This is a new record, we don't have to specify None for primary key.
-        employee['empNo'] = None
-        employee['birthDate'] = ''
-        employee['firstName'] = ''
-        employee['lastName'] = ''
-        employee['gender'] = ''
-        employee['hireDate'] = ''
-
-        status = EmployeesManager().write_to_database(employee)
-
-        # print("\nstatus.as_dict(): ", status.as_dict(), "\n")
-
-        assert status.code == HTTPStatus.INTERNAL_SERVER_ERROR.value
-        assert hasattr(status, 'data') == True
-        assert status.data != None
-        assert hasattr(status.data, 'errors') == True
-        assert len(status.data.errors) == 5
-
-        error = status.data.errors[ 0 ]
-        assert error[ 'id' ] == 'birth_date'
-        assert error[ 'label' ] == 'Birth Date'
-        assert len(error[ 'errors' ]) == 1
-        assert error[ 'errors' ][ 0 ] == BIRTH_DATE_MSG
-
-        error = status.data.errors[ 1 ]
-        assert error[ 'errors' ][ 0 ] == FIRST_NAME_MSG
-
-        error = status.data.errors[ 2 ]
-        assert error[ 'errors' ][ 0 ] == LAST_NAME_MSG
-
-        error = status.data.errors[ 3 ]
-        assert error[ 'errors' ][ 0 ] == GENDER_MSG
-
-        error = status.data.errors[ 4 ]
-        assert error[ 'errors' ][ 0 ] == HIRE_DATE_MSG
-
-        employee = {}
-        # This is a new record, we don't have to specify None for primary key.
         # employee['empNo'] = None
+        employee['email'] = 'behai_nguyen@hotmail.com'
+        employee['password'] = ',[(/V(w8#);("KG5~$'
         employee['birthDate'] = '25/12/1971'
         employee['firstName'] = 'Be Hai'
         employee['lastName'] = 'Doe'
@@ -340,21 +380,74 @@ def test_business_write_employee_invalid(app):
         assert error[ 'errors' ][ 0 ] == HIRE_DATE_AFTER_BIRTH_DATE_MSG
     finally:
         delete_employee('Do%', 'Be %')
-"""
 
-"""
 @pytest.mark.employees_mgr
-def test_business_write_employee(app):
+def test_business_write_employee_invalid_duplicate_email(app):
+    """
+    Detects duplicate email.
+    """
     try:
         delete_employee('Do%', 'Be %')
-
-        "\""
-        Insert a new employee.
-        "\""
 
         employee = {}
         # This is a new record, we don't have to specify None for primary key.
         # employee['empNo'] = None
+        employee['email'] = 'behai_nguyen@hotmail.com'
+        employee['password'] = ',[(/V(w8#);("KG5~$'
+        employee['birthDate'] = '25/12/1971'
+        employee['firstName'] = 'Be Hai'
+        employee['lastName'] = 'Doe'
+        employee['gender'] = 'M'
+        # Note: there is no leading 0 in single digit day, month.
+        employee['hireDate'] = '17/9/2000'
+
+        status = EmployeesManager().write_to_database(employee)
+
+        # print("\nstatus.as_dict(): ", status.as_dict(), "\n")
+
+        assert status.code == HTTPStatus.INTERNAL_SERVER_ERROR.value
+        assert hasattr(status, 'data') == True
+        assert status.data != None
+        assert hasattr(status.data, 'errors') == True
+        assert len(status.data.errors) == 1
+
+        error = status.data.errors[ 0 ]
+        print(error)
+        assert error[ 'id' ] == 'email'
+        assert error[ 'label' ] == 'Email'
+        assert len(error[ 'errors' ]) == 1
+        assert error[ 'errors' ][ 0 ] == DUPLICATE_EMAIL_MSG
+
+    finally:
+        delete_employee('Do%', 'Be %')
+
+@pytest.mark.employees_mgr
+def test_business_write_employee(app):
+    """
+    Test successfully write an employee record into database.
+
+    Test includes:
+        -- Writes a new employee into database.
+        -- Reads this newly inserted record back and verify.
+        -- Updates a some fields, and update the database.
+        -- Reads the updated employee record back and verify.
+        -- Note that updating ignores email and password.
+    """
+    try:
+        TEST_EMAIL = 'behai_nguyen_1@hotmail.com'
+        TEST_PASSWORD = ',[(/V(w8#);("KG5~$'
+
+        delete_employee('Do%', 'Be %')
+
+        """
+        Insert a new employee.
+        """
+
+        employee = {}
+        # This is a new record, we don't have to specify None for primary key.
+        # employee['empNo'] = None
+        employee['email'] = TEST_EMAIL
+        employee['password'] = TEST_PASSWORD
         employee['birthDate'] = '25/12/1971'
         employee['firstName'] = 'Be Hai'
         employee['lastName'] = 'Doe'
@@ -381,16 +474,17 @@ def test_business_write_employee(app):
         # 499999 is the last emp_no in the original test data.
         assert new_emp_no > 499999
 
-        "\""
+        """
         Read the newly inserted employee back and verify data inserted.
-        "\""
+        """
         status = EmployeesManager().select_by_employee_number(new_emp_no)
         
         assert status.code == HTTPStatus.OK.value
         assert status.data != None
         assert len(status.data) == 1
-
         assert status.data[0]['emp_no'] == new_emp_no
+        assert status.data[0]['email'] == TEST_EMAIL
+        assert PasswordHasher().verify(status.data[0]['password'], TEST_PASSWORD)
         assert status.data[0]['birth_date'] == '25/12/1971'
         assert status.data[0]['first_name'] == 'Be Hai'
         assert status.data[0]['last_name'] == 'Doe'
@@ -398,11 +492,11 @@ def test_business_write_employee(app):
         # Note: THERE IS LEADING 0 in single digit day, month.
         assert status.data[0]['hire_date'] == '17/09/1975'
 
-        "\""
+        """
         Update the just inserted employee:
             - set Gender to F
             - set Hire Date to 11/8/2005
-        "\""
+        """
         employee['empNo'] = new_emp_no
         employee['gender'] = 'F'
         employee['hireDate'] = '11/8/2005'
@@ -419,9 +513,9 @@ def test_business_write_employee(app):
         assert len(status.data.employees_new_list) == 0
         assert len(status.data.employees_updated_list) == 1
 
-        "\""
+        """
         Read the newly updated employee back and verify data updated.
-        "\""
+        """
         status = EmployeesManager().select_by_employee_number(new_emp_no)
         
         assert status.code == HTTPStatus.OK.value
@@ -429,6 +523,8 @@ def test_business_write_employee(app):
         assert len(status.data) == 1
 
         assert status.data[0]['emp_no'] == new_emp_no
+        assert status.data[0]['email'] == TEST_EMAIL
+        assert PasswordHasher().verify(status.data[0]['password'], TEST_PASSWORD)        
         assert status.data[0]['birth_date'] == '25/12/1971'
         assert status.data[0]['first_name'] == 'Be Hai'
         assert status.data[0]['last_name'] == 'Doe'
@@ -437,4 +533,88 @@ def test_business_write_employee(app):
 
     finally:
         delete_employee('Do%', 'Be %')
-"""
+
+@pytest.mark.employees_mgr
+def test_business_write_employee_update(app):
+    """
+    Test successfully write an employee record into database.
+
+    Test demonstrates: 'email' and 'password' don't get update on normal update.
+    """
+    try:
+        TEST_EMAIL = 'behai_nguyen_1@hotmail.com'
+        TEST_PASSWORD = ',[(/V(w8#);("KG5~$'
+
+        delete_employee('Do%', 'Be %')
+
+        """
+        Insert a new employee.
+        """
+
+        employee = {}
+        # This is a new record, we don't have to specify None for primary key.
+        # employee['empNo'] = None
+        employee['email'] = TEST_EMAIL
+        employee['password'] = TEST_PASSWORD
+        employee['birthDate'] = '25/12/1971'
+        employee['firstName'] = 'Be Hai'
+        employee['lastName'] = 'Doe'
+        employee['gender'] = 'M'
+        # Started working at around 4 years and 3 months old!!!
+        # Note: there is no leading 0 in single digit day, month.
+        employee['hireDate'] = '17/9/1975'
+
+        status = EmployeesManager().write_to_database(employee)
+
+        # Already test on the above test method.
+
+        new_emp_no = status.data.employees_new_list[0]['emp_no']
+
+        """
+        Update the just inserted employee:
+            - set Gender to F
+            - set Hire Date to 11/8/2005
+        """
+        employee['empNo'] = new_emp_no
+        employee['gender'] = 'F'
+        employee['hireDate'] = '11/8/2005'
+
+        # ATTEMPT TO UPDATE EMAIL AND PASSWORD: SHOULD NOT TAKE EFFECT.
+        employee['email'] = 'behai_nguyen_1@hotmail.com'
+        employee['password'] = 'password'
+
+        status = EmployeesManager().write_to_database(employee)
+
+        assert status.code == HTTPStatus.OK.value
+        assert status.data != None
+        assert hasattr(status.data, 'employees_new_list') == True
+        assert hasattr(status.data, 'employees_updated_list') == True
+        
+        # There is no new record.
+        # There is one (1) updated record.
+        assert len(status.data.employees_new_list) == 0
+        assert len(status.data.employees_updated_list) == 1
+
+        """
+        Read the newly updated employee back and verify data updated.
+        """
+        status = EmployeesManager().select_by_employee_number(new_emp_no)
+        
+        assert status.code == HTTPStatus.OK.value
+        assert status.data != None
+        assert len(status.data) == 1
+
+        assert status.data[0]['emp_no'] == new_emp_no
+
+        # 'email' and 'password' DON'T GET UPDATE ON NORMAL UPDATE.
+        assert status.data[0]['email'] == TEST_EMAIL
+        assert PasswordHasher().verify(status.data[0]['password'], TEST_PASSWORD)
+
+        assert status.data[0]['birth_date'] == '25/12/1971'
+        assert status.data[0]['first_name'] == 'Be Hai'
+        assert status.data[0]['last_name'] == 'Doe'
+        assert status.data[0]['gender'] == 'F'
+        assert status.data[0]['hire_date'] == '11/08/2005'
+
+    finally:
+        delete_employee('Do%', 'Be %')
