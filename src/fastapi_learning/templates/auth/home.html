@@ -45,12 +45,31 @@
 	});
 </script>
 
-{% set required_scopes = ['user:read'] %}
+{% set user_read_scope = ['user:read'] %}
+{% set user_write_scope = ['user:write'] %}
+{% set admin_read_scope = ['admin:read'] %}
+{% set admin_write_scope = ['admin:write'] %}
 
-{% set disabled_str = '' %}
+{% set user_read_disabled_str = '' %}
+{% set user_write_disabled_str = '' %}
+{% set admin_read_disabled_str = '' %}
+{% set admin_write_disabled_str = '' %}
+
 {% if not enable_no_scopes_ui() %}
-{%     if not has_required_scopes(required_scopes, data['user_scopes']) %}
-{%         set disabled_str = 'disabled' %}
+{%     if not has_required_scopes(user_read_scope, data['user_scopes']) %}
+{%         set user_read_disabled_str = 'disabled' %}
+{%     endif %}
+
+{%     if not has_required_scopes(user_write_scope, data['user_scopes']) %}
+{%         set user_write_disabled_str = 'disabled' %}
+{%     endif %}
+
+{%     if not has_required_scopes(admin_read_scope, data['user_scopes']) %}
+{%         set admin_read_disabled_str = 'disabled' %}
+{%     endif %}
+
+{%     if not has_required_scopes(admin_write_scope, data['user_scopes']) %}
+{%         set admin_write_disabled_str = 'disabled' %}
 {%     endif %}
 {% endif %}
 
@@ -59,17 +78,31 @@
 
     <div class="row">
         <div class="col-2">
-            <button type="button" id="meBtn" class="btn btn-link" {{disabled_str}}>My Info as JSON</button>
+            <button type="button" id="meBtn" class="btn btn-link" {{user_read_disabled_str}}>My Info as JSON</button>
         </div>
         <div class="col-2">
             <form method="GET" action="/admin/me" id="meForm">
-                <button type="submit" class="btn btn-primary" {{disabled_str}}>My Info</button>
+                <button type="submit" class="btn btn-primary" {{user_read_disabled_str}}>My Info</button>
             </form>
         </div>
         <div class="col-2">
             <form method="POST" action="/auth/logout" id="logoutForm">
                 <button type="submit" class="btn btn-primary">Logout</button>
             </form>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <button type="button" id="userUpdateBtn" class="btn btn-link"  
+                onclick="location.href='/emp/own-get-update/{{data['user_number']}}'" 
+                {{ user_write_disabled_str }}>Update Own Details</button>
+            &nbsp;|&nbsp;
+            <button type="button" id="empSearchBtn" class="btn btn-link" 
+                onclick="location.href='/emp/search'" {{ admin_read_disabled_str }}>Search Employees</button>
+            &nbsp;|&nbsp;
+            <button type="button" id="empAddNewBtn" class="btn btn-link" 
+                onclick="location.href='/emp/new'" {{ admin_write_disabled_str }}>Add a New Employee</button>
         </div>
     </div>
 </div>
