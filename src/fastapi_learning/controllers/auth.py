@@ -94,7 +94,7 @@ def __home_page(request: Request,
     if isinstance(token_data, HTTPException):
         data.update({"status_code": token_data.status_code, "detail": token_data.detail})
     else:
-        data.update({"user_scopes": token_data.scopes})
+        data.update({"user_number": token_data.user_number, "user_scopes": token_data.scopes})
 
     # data.update({"status_code": 401, "detail": "Failed test..."})
 
@@ -192,6 +192,7 @@ async def login(request: Request,
         return await bad_login(op_status)
     
     access_token = create_access_token(data={'sub': op_status.data[0]['email'],
+                                             'emp_no': op_status.data[0]['emp_no'],
                                              'scopes': op_status.data.scopes})
 
     request.session["access_token"] = access_token
