@@ -46,13 +46,31 @@ class Employees(WriteCapableTable):
         """
         return self.run_select_sql(
             "select * from employees where email = '{0}'".format(email), True)
+
+    def select_by_partial_last_name_and_first_name(self, 
+            last_name: str, first_name: str) -> ResultStatus:
+        
+        return self.run_stored_proc('get_employees', [last_name, first_name], True)
+
+    def select_by_employee_number(self, emp_no: int) -> ResultStatus:
+        return self.run_select_sql(
+            'select * from employees where emp_no = {0}'.format(emp_no), True)
     
+    def count_by_email(self, email: str) -> ResultStatus:
+        """
+        Note the usage of the single quotation marks '{0}': MySQL, PostgreSQL and
+        MariaDB accept this. PostgreSQL rejects double quotation mark ("{0}").
+        """
+        return self.run_select_sql(
+            "select count(*) _count_ from employees where email = '{0}'".format(email), True)
+
 class LoggedInEmployee(BaseModel):
     """
     See also https://docs.pydantic.dev/1.10/usage/models/. This is a Pydantic 
     implementation: a SQLAlchemy class for database model and Pydantic model
     for internal data representation.
     """
+    emp_no: int
     email: str
     password: str
     birth_date: str
