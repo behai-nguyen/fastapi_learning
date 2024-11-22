@@ -133,6 +133,14 @@ git clone -b v0.11.0 https://github.com/behai-nguyen/fastapi_learning.git
 
 In the <a href="https://behainguyen.wordpress.com/2024/10/08/python-fastapi-implementing-oauth2-scopes-part-01/" title="Python FastAPI: Implementing OAuth2 Scopes Part 01" target="_blank">previous post</a>, we implemented <a href="https://fastapi.tiangolo.com/advanced/security/oauth2-scopes/" title="OAuth2 scopes" target="_blank">OAuth2 scopes</a> for endpoint handler methods. This post extends that implementation to include <strong>UI elements</strong> — components that send HTTP requests to the server application.
 
+12. [Python FastAPI: OAuth2 Scopes Part 03 - New CRUD Endpoints and User-Assigned Scopes](https://behainguyen.wordpress.com/2024/11/22/python-fastapi-oauth2-scopes-part-03-new-crud-endpoints-and-user-assigned-scopes/)
+
+```
+git clone -b v0.12.0 https://github.com/behai-nguyen/fastapi_learning.git
+```
+
+Continuing with the <a href="https://fastapi.tiangolo.com/advanced/security/oauth2-scopes/" title="OAuth2 scopes" target="_blank">FastAPI OAuth2 scopes</a> topic, in this installment of our <a href="https://github.com/behai-nguyen/fastapi_learning" title="Index of the Complete Series" target="_blank"> Python FastAPI learning series</a>, we will implement seven (7) new routes that perform CRUD operations on the <code>employees</code> table. These new routes require scopes that we have implemented but have not used so far: <code>user:write</code>, <code>admin:read</code>, and <code>admin:write</code>. Please recall that we proposed this implementation in the <a href="https://behainguyen.wordpress.com/2024/10/19/python-fastapi-oauth2-scopes-part-02-ui-elements-and-user-assigned-scopes/#concluding-remarks" title="Python FastAPI: OAuth2 Scopes Part 02 - UI Elements and User-Assigned Scopes" target="_blank">last post</a>.
+
 ## License
 [MIT license](http://www.opensource.org/licenses/mit-license.php)
 and the [GPL license](http://www.gnu.org/licenses/gpl.html).
