@@ -138,8 +138,15 @@ def validate(data: dict, forms: list) -> ResultStatus:
                         errors.append(error)
 
     except Exception as e:
-        logger().exception(str(e))
-        return make_500_status(str(e))
+        err_msg = str(e)
+        logger().exception(err_msg)
+
+        error = {"id": e.__class__.__qualname__, 
+                 "label": e.__class__.__qualname__, 
+                 "errors": err_msg}         
+        errors.append(error)
+                
+        return make_500_status('').add_data(errors, name='errors')
     
     logger().debug('Exited.')
     
