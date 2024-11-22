@@ -27,6 +27,8 @@ dependencies = [
     'pyjwt',
     'werkzeug',
     'python-dotenv',
+    'python-multipart',
+    'email_validator',
     'wtforms',
     'bh-database[mysql-connector-python]',
     'bh-database[psycopg2-binary]',
