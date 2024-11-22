@@ -18,6 +18,7 @@ from contextlib import asynccontextmanager
 import uvicorn
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 
 from fastapi.staticfiles import StaticFiles
 
@@ -35,7 +36,13 @@ from fastapi_learning.common.queue_logging import (
 
 from bh_database.core import Database
 
-from fastapi_learning.controllers import auth, admin
+from fastapi_learning.controllers import (
+    auth, 
+    admin,
+    employees_admin,
+)
+
+from fastapi_learning.controllers.required_login import RequiresLogin
 
 prepare_logging_and_start_listeners()
 
@@ -92,11 +99,18 @@ app.include_router(auth.router)
 app.include_router(auth.api_router)
 app.include_router(admin.router)
 app.include_router(admin.api_router)
+app.include_router(employees_admin.router)
 
 @app.get("/", response_model=None)
 async def index(request: Request) -> Response | dict:
     from fastapi_learning.controllers.auth import login_page
     return await login_page(request)
+
+# Redirect to login using custom exception handlers.
+# See https://stackoverflow.com/a/76887329
+@app.exception_handler(RequiresLogin)
+async def requires_login(request: Request, _: Exception):
+    return RedirectResponse(url='/auth/login?state=2')
 
 #
 # Remove the code block below to use the command:
