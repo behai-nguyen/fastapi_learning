@@ -18,6 +18,8 @@ from fastapi import (
     Response,
 )
 
+from fastapi.security import SecurityScopes
+
 from fastapi.routing import APIRoute
 
 from fastapi_learning.common.queue_logging import logger
@@ -61,6 +63,41 @@ def has_required_scopes(required_scopes: list, assigned_scopes: list) -> bool:
     required_scopes.
     """
     return has_required_permissions(required_scopes, assigned_scopes)
+
+async def verify_user_scopes(security_scopes: SecurityScopes, 
+                             token: str, failed_msg: str) -> tuple:
+    """
+    Check if users have scopes given the required scopes and user JWT.
+
+    Return: 
+        (bool, decoded token data, permissions checking result)
+        (bool, [TokenData | HTTPException], [HTTPException | None])
+
+        Only possible return values:
+
+        (False, HTTPException, None)
+        (False, TokenData, HTTPException)
+        (True, TokenData, None)
+    """
+
+    token_data = attempt_decoding_access_token(token)
+    if isinstance(token_data, HTTPException):
+        return (False, token_data, None)
+    
+    if not has_required_permissions(security_scopes.scopes, token_data.scopes): 
+        logger.debug(failed_msg)
+
+        if security_scopes.scopes:
+            authenticate_value = f'Bearer scope="{security_scopes.scope_str}"'
+        else:
+            authenticate_value = "Bearer"
+
+        exception = credentials_exception(authenticate_value=authenticate_value)
+        exception.detail = failed_msg
+
+        return (False, token_data, exception)
+    
+    return (True, token_data, None)
 
 templates = Jinja2Templates(directory="src/fastapi_learning/templates")
 # Added functions to be used by templates.
