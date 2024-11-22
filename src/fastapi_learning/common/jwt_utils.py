@@ -36,12 +36,16 @@ def decode_access_token(token: str) -> Union[TokenData, HTTPException]:
     try:
         payload = jwt.decode(token, os.environ.get('SECRET_KEY'), 
                              algorithms=[os.environ.get('ALGORITHM')])
-
+        
         username: str = payload.get("sub")
         if username is None:
             return credentials_exception
         
-        return TokenData(user_name=username, scopes=payload.get("scopes", []))
+        usernumber: int = int(payload.get("emp_no")) if 'emp_no' in payload else None
+        if usernumber is None:
+            return credentials_exception
+        
+        return TokenData(user_name=username, user_number=usernumber, scopes=payload.get("scopes", []))
 
     except InvalidTokenError:
         return credentials_exception
