@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% if exception is none or exception is not defined %}
+
+<script>
+	function setFormAction() {
+		$('#searchEmpFrm').on( 'submit', function( event ) {
+			$(this).prop('action', $( location ).attr( "origin" ) + '/emp/search/' + 
+			    $('#last_name').val() + '/' + $('#first_name').val());
+		});
+	}
+
+	$( document ).ready( function() {
+		setFormAction();
+	});
+</script>
+
+{% set admin_read_scope = ['admin:read'] %}
+{% set admin_write_scope = ['admin:write'] %}
+
+{% set admin_read_disabled_str = '' %}
+{% set admin_write_disabled_str = '' %}
+
+{% if not enable_no_scopes_ui() %}
+{%     if not has_required_scopes(admin_read_scope, data['user_scopes']) %}
+{%         set admin_read_disabled_str = 'disabled' %}
+{%     endif %}
+
+{%     if not has_required_scopes(admin_write_scope, data['user_scopes']) %}
+{%         set admin_write_disabled_str = 'disabled' %}
+{%     endif %}
+{% endif %}
+
+<div>
+	<form method="post" id="searchEmpFrm" action="">
+		<label for="last_name">Partial Last Name</label>
+		<input id="last_name" required placeholder="%nas%" value="%nas%" {{ admin_read_disabled_str }}>
+		<label for="first_name">Partial First Name</label>
+		<input id="first_name" required placeholder="%An" value="%An" {{ admin_read_disabled_str }}>
+		<input type="submit" value="Search" {{ admin_read_disabled_str }}>
+	</form>
+</div>
+
+<div>
+	<div class="col">
+	    <a href="/auth/home" class="link-primary">Home</a> | &nbsp;
+
+		{% if admin_write_disabled_str == '' %}
+	    <a href="/emp/new" class="link-primary">Add a New Employee</a>
+		{% else %}
+		<span class="text-muted">Add a New Employee</span>
+		{% endif %}
+    </div>
+</div>
+
+{% else %}
+
+<div class="row">
+	<div class="col">
+		<h2>It's on me... Please contact support, quoting the below message:</h2>
+	</div>
+</div>
+
+<div class="row">
+	<div class="col">
+		<h2 class="text-danger fw-bold">{{ exception['detail'] }}</h2>
+	</div>
+</div>
+
+<div class="row mt-3">
+	<div class="col"><a href="/auth/home" class="link-primary"><h2>Home</h2></a></div>
+</div>
+
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% if exception is none or exception is not defined %}
+
+    <script>
+        let empNo = '';
+        let email = '';
+        let birthDate = '';
+        let firstName = '';
+        let lastName = '';
+        let gender = '';
+        let hireDate = '';
+    </script>
+
+    {% if employee is defined and employee %}
+    <script>
+        empNo = {{ employee[0].emp_no }};
+        email = '{{ employee[0].email }}';
+        birthDate = '{{ employee[0].birth_date }}';
+        firstName = '{{ employee[0].first_name }}';
+        lastName = '{{ employee[0].last_name }}';
+        gender = '{{ employee[0].gender }}';
+        hireDate = '{{ employee[0].hire_date }}';
+    </script>
+    {% endif %}
+
+    <script>
+        function populateEmployee() {
+            $( '#empNo' ).val( empNo );
+            $( '#email' ).text( email );
+            $( '#birthDate' ).val( birthDate );
+            $( '#firstName' ).val( firstName );
+            $( '#lastName' ).val( lastName );
+            $( '#gender' ).val( gender );
+            $( '#hireDate' ).val( hireDate );
+        }
+
+        $( document ).ready( function() {
+            empBindDataChange();
+            populateEmployee();
+            saveEmployee( '{{data['save_url']}}' );
+            newEmployee();
+        });    
+    </script>
+
+    {# Note: write_disabled_str represents both 'user:write' and 'admin:write'. #}
+    {% set write_disabled_str = '' %}
+
+    {% set admin_read_disabled_str = '' %}
+    {% set admin_write_disabled_str = '' %}
+
+    {% set admin_read_scope = ['admin:read'] %}
+    {% set admin_write_scope = ['admin:write'] %}
+    
+    {% if not enable_no_scopes_ui() %}
+    {%     if not has_required_scopes(data['required_scopes'], data['user_scopes']) %}
+    {%         set write_disabled_str = 'disabled' %}
+    {%     endif %}
+
+    {%     if not has_required_scopes(admin_read_scope, data['user_scopes']) %}
+    {%         set admin_read_disabled_str = 'disabled' %}
+    {%     endif %}
+
+    {%     if not has_required_scopes(admin_write_scope, data['user_scopes']) %}
+    {%         set admin_write_disabled_str = 'disabled' %}
+    {%     endif %}
+    {% endif %}
+    
+    <form method="post" id="empFrm">
+        <div class="row mx-1 mb-1 page-heading">
+            <div class="col">Employee Detail</div>
+        </div>
+
+        <div class="row mx-1 mb-1">
+            <div class="col-3"><label for="empNo">Emp. No.</label></div>
+            <div class="col-2">
+                <input name="empNo" id="empNo" readonly class="selector-input" {{ write_disabled_str }}>
+            </div>
+        </div>
+
+        <div class="row mx-1 mb-1">
+            <div class="col-3"><label for="email">Email</label></div>
+            <div class="col-2">
+                <span id="email"></span>
+            </div>
+        </div>
+
+        <div class="row mx-1 mb-1">
+            <div class="col-3"><label for="birthDate">Birth Date (dd/mm/yyy)</label></div>
+            <div class="col-2">
+                <input name="birthDate" id="birthDate" required maxlength="10" class="selector-input" {{ write_disabled_str }}>
+            </div>
+        </div>
+
+        <div class="row mx-1 mb-1">
+            <div class="col-3"><label for="firstName">First Name</label></div>
+            <div class="col-2">
+                <input name="firstName" id="firstName" required maxlength="14" class="selector-input" {{ write_disabled_str }}>
+            </div>
+        </div>
+
+        <div class="row mx-1 mb-1">
+            <div class="col-3"><label for="lastName">Last Name</label></div>
+            <div class="col-2">
+                <input name="lastName" id="lastName" required maxlength="16" class="selector-input" {{ write_disabled_str }}>
+            </div>
+        </div>
+
+        <div class="row mx-1 mb-1">
+            <div class="col-3"><label for="gender">Gender</label></div>
+            <div class="col-1">
+                <select name="gender" id="gender" required class="selector-input" {{ write_disabled_str }}>
+                    <option value="">--select--</option>
+                    <option value="F">Female</option>
+                    <option value="M">Male</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="row mx-1 mb-1">
+            <div class="col-3"><label for="hireDate">Hire Date (dd/mm/yyy)</label></div>
+            <div class="col-2">
+                <input name="hireDate" id="hireDate" required maxlength="10" class="selector-input" {{ write_disabled_str }}>
+            </div>
+        </div>
+
+        <div class="row mx-1 mb-1">
+            <div class="col">
+                <button type="button" id="saveEmpBtn" class="btn btn-primary btn-sm" disabled>Save</button>
+                <button type="button" id="newEmpBtn" class="btn btn-primary btn-sm" data-url="emp/new" {{ admin_write_disabled_str }}>New</button>
+                <button type="button" id="empSearchBtn" class="btn btn-link" 
+                    onclick="location.href='/emp/search'" {{ admin_read_disabled_str }}>Search Employees</button>
+                &nbsp;|&nbsp;
+                <a href="/auth/home" class="link-primary">Home</a>
+            </div>
+        </div>
+    </form>
+
+{% else %}
+
+    <div class="row">
+        <div class="col">
+            <h2>It's on me... Please contact support, quoting the below message:</h2>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <h2 class="text-danger fw-bold">{{ exception['detail'] }}</h2>
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col"><a href="/auth/home" class="link-primary"><h2>Home</h2></a></div>
+    </div>
+
+{% endif %}
+
+{% endblock %}
