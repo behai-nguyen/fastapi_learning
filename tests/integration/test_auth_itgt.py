@@ -29,7 +29,8 @@ from fastapi_learning.common.consts import (
     LOGIN_PAGE_TITLE,
     HOME_PAGE_TITLE,
     BAD_LOGIN_MSG,
-    INVALID_USERNAME_PASSWORD_MSG
+    INVALID_USERNAME_PASSWORD_MSG,
+    NOT_LOGGED_IN_SESSION_MSG,
 )
 
 from tests import test_main
@@ -68,6 +69,14 @@ def test_integration_login_bad_email_html(test_client):
 def test_integration_login_bad_email_json(test_client):
     """
     Test /auth/token path with a valid credential.
+
+    Response:
+        {
+            "status": {
+                "code": 400,
+                "text": "Bad username, bad password or some something else on my part. Please contact support"
+            }
+        }    
     """
 
     importlib.reload(test_main)
@@ -85,11 +94,14 @@ def test_integration_login_bad_email_json(test_client):
         login_response = test_client.post('/auth/token', data=login_data)
 
         assert login_response != None
-        assert login_response.status_code == http_status.HTTP_400_BAD_REQUEST
+        # assert login_response.status_code == http_status.HTTP_400_BAD_REQUEST
+        assert login_response.status_code == http_status.HTTP_200_OK
 
-        json = login_response.json()
-        # assert json['status_code'] == http_status.HTTP_400_BAD_REQUEST
-        assert json['detail'] == BAD_LOGIN_MSG
+        status = login_response.json()
+
+        # Should always check for this.
+        assert status['status']['code'] == http_status.HTTP_500_INTERNAL_SERVER_ERROR
+        assert status['status']['text'] == BAD_LOGIN_MSG
 
     finally:
         pass
@@ -98,6 +110,14 @@ def test_integration_login_bad_email_json(test_client):
 def test_integration_login_bad_password_json(test_client):
     """
     Test /auth/token path with a valid credential.
+
+    Response:
+        {
+            "status": {
+                "code": 400,
+                "text": "Bad username, bad password or some something else on my part. Please contact support"
+            }
+        }
     """
 
     importlib.reload(test_main)
@@ -115,11 +135,14 @@ def test_integration_login_bad_password_json(test_client):
         login_response = test_client.post('/auth/token', data=login_data)
 
         assert login_response != None
-        assert login_response.status_code == http_status.HTTP_400_BAD_REQUEST
+        # assert login_response.status_code == http_status.HTTP_400_BAD_REQUEST
+        assert login_response.status_code == http_status.HTTP_200_OK
 
-        json = login_response.json()
-        # assert json['status_code'] == http_status.HTTP_400_BAD_REQUEST
-        assert json['detail'] == BAD_LOGIN_MSG
+        status = login_response.json()
+
+        # Should always check for this.
+        assert status['status']['code'] == http_status.HTTP_500_INTERNAL_SERVER_ERROR
+        assert status['status']['text'] == BAD_LOGIN_MSG
 
     finally:
         pass
@@ -157,6 +180,19 @@ def test_integration_valid_login_html(test_client):
 def test_integration_valid_login_json(test_client):
     """
     Test /auth/token path with a valid credential.
+
+    Response:
+        {
+            "status": {
+                "code": 200,
+                "text": ""
+            },
+            "data": {
+                "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiZWhhaV9uZ3V5ZW5AaG90bWFpbC5jb20iLCJlbXBfbm8iOjUwMDIyMiwic2NvcGVzIjpbInVzZXI6cmVhZCIsInVzZXI6d3JpdGUiXSwiZXhwIjoxNzMyODkyODM1fQ.biFynV-IHZ2-td_wCM5sOpFRKWNEaHEVDsIs_WJl6UE",
+                "detail": "",
+                "token_type": "bearer"
+            }
+        }
     """
 
     importlib.reload(test_main)
@@ -178,11 +214,18 @@ def test_integration_valid_login_json(test_client):
 
         status = login_response.json()
 
-        token_data = decode_access_token(status['access_token'])
+        # Should always check for this.
+        assert status['status']['code'] == http_status.HTTP_200_OK
+        assert status['status']['text'] == ''
+
+        assert ('data' in status) == True
+        data = status['data']
+        token_data = decode_access_token(data['access_token'])
         assert isinstance(token_data, TokenData) == True
 
         assert token_data.user_name == 'behai_nguyen@hotmail.com'
-        assert status['token_type'] == 'bearer'
+        assert data['detail'] == ''
+        assert data['token_type'] == 'bearer'
 
     finally:
         # Logout. Clean up server sessions.
@@ -211,7 +254,7 @@ def test_integration_invalid_username_login_html(test_client):
     assert response.status_code == http_status.HTTP_200_OK
 
     assert ('<title>Learn FastAPI Login</title>' in response.text) == True
-    assert ('<h4>Incorrect username or password</h4>' in response.text) == True
+    assert (f'<h4>{INVALID_USERNAME_PASSWORD_MSG}</h4>' in response.text) == True
 
 @pytest.mark.auth_integration
 def test_integration_invalid_password_login_html(test_client):
@@ -236,12 +279,20 @@ def test_integration_invalid_password_login_html(test_client):
     assert response.status_code == http_status.HTTP_200_OK
 
     assert ('<title>Learn FastAPI Login</title>' in response.text) == True
-    assert ('<h4>Incorrect username or password</h4>' in response.text) == True
+    assert (f'<h4>{INVALID_USERNAME_PASSWORD_MSG}</h4>' in response.text) == True
 
 @pytest.mark.auth_integration
 def test_integration_invalid_username_login_json(test_client):
     """
     Test /auth/token path with an invalid credential.
+
+    Response:
+        {
+            "status": {
+                "code": 400,
+                "text": "Incorrect username or password"
+            }
+        }
     """
 
     importlib.reload(test_main)
@@ -258,15 +309,27 @@ def test_integration_invalid_username_login_json(test_client):
     response = test_client.post('/auth/token', data=login_data)
 
     assert response != None
-    assert response.status_code == http_status.HTTP_400_BAD_REQUEST
+    # assert response.status_code == http_status.HTTP_400_BAD_REQUEST
+    assert response.status_code == http_status.HTTP_200_OK
 
     status = response.json()
-    assert status['detail'] == INVALID_USERNAME_PASSWORD_MSG
+    
+    # Should always check for this.
+    assert status['status']['code'] == http_status.HTTP_401_UNAUTHORIZED
+    assert status['status']['text'] == INVALID_USERNAME_PASSWORD_MSG
 
 @pytest.mark.auth_integration
 def test_integration_invalid_password_login_json(test_client):
     """
     Test /auth/token path with an invalid credential.
+
+    Response:
+        {
+            "status": {
+                "code": 400,
+                "text": "Incorrect username or password"
+            }
+        }
     """
 
     importlib.reload(test_main)
@@ -283,10 +346,14 @@ def test_integration_invalid_password_login_json(test_client):
     response = test_client.post('/auth/token', data=login_data)
 
     assert response != None
-    assert response.status_code == http_status.HTTP_400_BAD_REQUEST
+    # assert response.status_code == http_status.HTTP_400_BAD_REQUEST
+    assert response.status_code == http_status.HTTP_200_OK
 
     status = response.json()
-    assert status['detail'] == INVALID_USERNAME_PASSWORD_MSG
+
+    # Should always check for this.
+    assert status['status']['code'] == http_status.HTTP_401_UNAUTHORIZED
+    assert status['status']['text'] == INVALID_USERNAME_PASSWORD_MSG
 
 @pytest.mark.auth_integration
 def test_integration_valid_login_twice(test_client):
@@ -349,7 +416,7 @@ def test_integration_logout_with_prior_login(test_client):
     assert response.status_code == http_status.HTTP_200_OK
 
     assert ('<title>Learn FastAPI Login</title>' in response.text) == True
-    assert ('<h2>This session has not been logged in before</h2>' in response.text) == False
+    assert (f'<h2>{NOT_LOGGED_IN_SESSION_MSG}</h2>' in response.text) == False
 
 @pytest.mark.auth_integration
 def test_integration_logout_without_prior_login(test_client):
@@ -367,7 +434,7 @@ def test_integration_logout_without_prior_login(test_client):
     assert response.status_code == http_status.HTTP_200_OK
 
     assert ('<title>Learn FastAPI Login</title>' in response.text) == True
-    assert ('<h4>This session has not been logged in before</h4>' in response.text) == True
+    assert (f'<h4>{NOT_LOGGED_IN_SESSION_MSG}</h4>' in response.text) == True
 
 @pytest.mark.auth_integration
 def test_integration_root_path_get_login_page(test_client):
@@ -386,7 +453,7 @@ def test_integration_root_path_get_login_page(test_client):
     assert response.status_code == http_status.HTTP_200_OK
 
     assert ('<title>Learn FastAPI Login</title>' in response.text) == True
-    assert ('<h2>This session has not been logged in before</h2>' in response.text) == False
+    assert (f'<h2>{NOT_LOGGED_IN_SESSION_MSG}</h2>' in response.text) == False
 
 @pytest.mark.auth_integration
 def test_integration_get_login_page(test_client):
@@ -405,7 +472,7 @@ def test_integration_get_login_page(test_client):
     assert response.status_code == http_status.HTTP_200_OK
 
     assert ('<title>Learn FastAPI Login</title>' in response.text) == True
-    assert ('<h2>This session has not been logged in before</h2>' in response.text) == False
+    assert (f'<h2>{NOT_LOGGED_IN_SESSION_MSG}</h2>' in response.text) == False
 
 @pytest.mark.auth_integration
 def test_integration_get_login_page_while_logged_in(test_client):
