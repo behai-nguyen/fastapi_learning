@@ -78,3 +78,4 @@ class LoggedInEmployee(BaseModel):
     last_name: str
     gender: str
     hire_date: str
+    scopes: list[str] = []
