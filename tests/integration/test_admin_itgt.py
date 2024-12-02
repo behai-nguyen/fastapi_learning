@@ -18,6 +18,9 @@ import importlib
 import pytest
 
 from fastapi import status as http_status
+
+from argon2 import PasswordHasher
+
 from mimetypes import types_map
 
 from tests import test_main
@@ -28,6 +31,7 @@ from fastapi_learning.common.consts import (
     RESPONSE_FORMAT,
     NOT_AUTHENTICATED_MSG,
     INVALID_AUTH_CREDENTIALS_MSG,
+    INVALID_CREDENTIALS_MSG,
 )
 
 from tests import logout, login
@@ -36,6 +40,28 @@ from tests import logout, login
 def test_integration_valid_admin_own_detail_json(test_client):
     """
     Test /admin/me path after a valid login.
+
+    JSON Response:
+        {
+            "status": {
+                "code": 200,
+                "text": ""
+            },
+            "data": {
+                "birth_date": "09/12/1978",
+                "email": "behai_nguyen@hotmail.com",
+                "emp_no": 500222,
+                "first_name": "Be Hai",
+                "gender": "M",
+                "hire_date": "01/11/2022",
+                "last_name": "Nguyen",
+                "password": "$argon2id$v=19$m=16,t=2,p=1$b2szcWQ4a0tlTkFydUdOaw$7LX7WCYbItEMEwvH3yUxPA",
+                "scopes": [
+                    "user:read",
+                    "user:write"
+                ]
+            }
+        }
     """
 
     importlib.reload(test_main)
@@ -59,10 +85,22 @@ def test_integration_valid_admin_own_detail_json(test_client):
         assert response.status_code == http_status.HTTP_200_OK
 
         status = response.json()
-        assert status['email'] == 'behai_nguyen@hotmail.com'
-        assert status['first_name'] == 'Be Hai'
-        assert status['last_name'] == 'Nguyen'
-        assert status['password'] == '$argon2id$v=19$m=16,t=2,p=1$b2szcWQ4a0tlTkFydUdOaw$7LX7WCYbItEMEwvH3yUxPA'
+        
+        # Should always check for this.
+        assert status['status']['code'] == http_status.HTTP_200_OK
+        assert status['status']['text'] == ''
+
+        assert ('data' in status) == True
+        user = status['data']
+
+        assert user['email'] == 'behai_nguyen@hotmail.com'
+        assert user['first_name'] == 'Be Hai'
+        assert user['last_name'] == 'Nguyen'
+        assert PasswordHasher().verify(user['password'], 'password') == True
+
+        assert len(user['scopes']) == 2
+        assert user['scopes'][0] == 'user:read'
+        assert user['scopes'][1] == 'user:write'
 
     finally:
         # Logout. Clean up server sessions.
@@ -116,11 +154,19 @@ def test_integration_not_auth_admin_own_detail_json(test_client):
     # No valid login.
     response = test_client.get('/admin/me')
 
+    # See:
+    #     @app.exception_handler(RequiresLogin)
+    #     async def requires_login(request: Request, _: Exception):
     assert response != None
-    assert response.status_code == http_status.HTTP_401_UNAUTHORIZED
+    # assert response.status_code == http_status.HTTP_401_UNAUTHORIZED
+    assert response.status_code == http_status.HTTP_200_OK
 
     status = response.json()
-    assert status['detail'] == NOT_AUTHENTICATED_MSG
+    assert status != None
+    
+    # Should always check for this.
+    assert status['status']['code'] == http_status.HTTP_401_UNAUTHORIZED
+    assert status['status']['text'] == NOT_AUTHENTICATED_MSG
 
 @pytest.mark.admin_integration
 def test_integration_not_auth_admin_own_detail_html(test_client):
@@ -141,7 +187,7 @@ def test_integration_not_auth_admin_own_detail_html(test_client):
 
     # Login page.
     assert ('<title>Learn FastAPI Login</title>' in response.text) == True
-    assert ('<h4>Please log in to continue</h4>' in response.text) == True
+    assert (f'<h4>{NOT_AUTHENTICATED_MSG}</h4>' in response.text) == True
 
 @pytest.mark.admin_integration
 def test_integration_invalid_credentials_admin_own_detail_json(test_client):
@@ -153,7 +199,7 @@ def test_integration_invalid_credentials_admin_own_detail_json(test_client):
 
     test_client.headers.clear()
 
-    access_token = create_access_token(data={"sub": "behai_"})
+    access_token = create_access_token(data={"sub": "behai_", 'emp_no': 8000})
 
     # 'Authorization' is the credential.
     # Expect JSON response.
@@ -163,11 +209,21 @@ def test_integration_invalid_credentials_admin_own_detail_json(test_client):
     # No valid login.
     response = test_client.get('/admin/me')
 
+    # See:
+    #     @app.exception_handler(RequiresLogin)
+    #     async def requires_login(request: Request, _: Exception):
     assert response != None
-    assert response.status_code == http_status.HTTP_401_UNAUTHORIZED
+    # assert response.status_code == http_status.HTTP_401_UNAUTHORIZED
+    assert response.status_code == http_status.HTTP_200_OK
 
     status = response.json()
-    assert status['detail'] == INVALID_AUTH_CREDENTIALS_MSG
+    
+    status = response.json()
+    assert status != None
+    
+    # Should always check for this.
+    assert status['status']['code'] == http_status.HTTP_500_INTERNAL_SERVER_ERROR
+    assert status['status']['text'] == INVALID_AUTH_CREDENTIALS_MSG
 
 @pytest.mark.admin_integration
 def test_integration_invalid_credentials_admin_own_detail_html(test_client):
@@ -189,6 +245,8 @@ def test_integration_invalid_credentials_admin_own_detail_html(test_client):
     # Can't set http_status.HTTP_401_UNAUTHORIZED!
     assert response.status_code == http_status.HTTP_200_OK
 
+    print(f"\n{response.text}\n")
+
     # Login page.
     assert ('<title>Learn FastAPI Login</title>' in response.text) == True
-    assert ('<h4>Please log in to continue</h4>' in response.text) == True
+    assert (f'<h4>{INVALID_CREDENTIALS_MSG}</h4>' in response.text) == True
