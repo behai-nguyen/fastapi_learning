@@ -22,7 +22,6 @@ dependencies = [
     'fastapi',
     'uvicorn[standard]',
     'starsessions[redis]',
-    'aioredis',
     'argon2-cffi',
     'pyjwt',
     'werkzeug',
