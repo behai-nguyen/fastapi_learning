@@ -12,8 +12,18 @@
 
     {% if valid_logged_in_employee(data) %}
     <div class="row">
+        <div class="col-2">User number:</div>
+        <div class="col-3">{{ data['emp_no'] }}</div>
+    </div>
+    
+    <div class="row">
         <div class="col-2">User name:</div>
         <div class="col-3">{{ data['email'] }}</div>
+    </div>
+
+    <div class="row">
+        <div class="col-2">Scopes:</div>
+        <div class="col-3">{{ data['scopes'] }}</div>
     </div>
 
     <div class="row">
