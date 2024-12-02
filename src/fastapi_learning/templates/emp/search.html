@@ -17,29 +17,18 @@
 	});
 </script>
 
-{% set admin_read_scope = ['admin:read'] %}
-{% set admin_write_scope = ['admin:write'] %}
+{% set states = get_ui_states(['admin:read', 'admin:write'], data['user_scopes']) %}
 
-{% set admin_read_disabled_str = '' %}
-{% set admin_write_disabled_str = '' %}
-
-{% if not enable_no_scopes_ui() %}
-{%     if not has_required_scopes(admin_read_scope, data['user_scopes']) %}
-{%         set admin_read_disabled_str = 'disabled' %}
-{%     endif %}
-
-{%     if not has_required_scopes(admin_write_scope, data['user_scopes']) %}
-{%         set admin_write_disabled_str = 'disabled' %}
-{%     endif %}
-{% endif %}
+{% set admin_read_state_str = states[0] %}
+{% set admin_write_state_str = states[1] %}
 
 <div>
 	<form method="post" id="searchEmpFrm" action="">
 		<label for="last_name">Partial Last Name</label>
-		<input id="last_name" required placeholder="%nas%" value="%nas%" {{ admin_read_disabled_str }}>
+		<input id="last_name" required placeholder="%nas%" value="%nas%" {{ admin_read_state_str }}>
 		<label for="first_name">Partial First Name</label>
-		<input id="first_name" required placeholder="%An" value="%An" {{ admin_read_disabled_str }}>
-		<input type="submit" value="Search" {{ admin_read_disabled_str }}>
+		<input id="first_name" required placeholder="%An" value="%An" {{ admin_read_state_str }}>
+		<input type="submit" value="Search" {{ admin_read_state_str }}>
 	</form>
 </div>
 
@@ -47,7 +36,7 @@
 	<div class="col">
 	    <a href="/auth/home" class="link-primary">Home</a> | &nbsp;
 
-		{% if admin_write_disabled_str == '' %}
+		{% if admin_write_state_str == '' %}
 	    <a href="/emp/new" class="link-primary">Add a New Employee</a>
 		{% else %}
 		<span class="text-muted">Add a New Employee</span>

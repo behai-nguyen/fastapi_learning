@@ -45,29 +45,20 @@
         });    
     </script>
 
-    {# Note: write_disabled_str represents both 'user:write' and 'admin:write'. #}
-    {% set write_disabled_str = '' %}
+    {#
+        Note: write_state_str represents both 'user:write' and 'admin:write'.
+        data['required_scopes'] has only one element.
+    #}
 
-    {% set admin_read_disabled_str = '' %}
-    {% set admin_write_disabled_str = '' %}
+    {% set states = get_ui_states(data['required_scopes'], data['user_scopes']) %}
 
-    {% set admin_read_scope = ['admin:read'] %}
-    {% set admin_write_scope = ['admin:write'] %}
-    
-    {% if not enable_no_scopes_ui() %}
-    {%     if not has_required_scopes(data['required_scopes'], data['user_scopes']) %}
-    {%         set write_disabled_str = 'disabled' %}
-    {%     endif %}
+    {% set write_state_str = states[0] %}
 
-    {%     if not has_required_scopes(admin_read_scope, data['user_scopes']) %}
-    {%         set admin_read_disabled_str = 'disabled' %}
-    {%     endif %}
+    {% set states = get_ui_states(['admin:read', 'admin:write'], data['user_scopes']) %}
 
-    {%     if not has_required_scopes(admin_write_scope, data['user_scopes']) %}
-    {%         set admin_write_disabled_str = 'disabled' %}
-    {%     endif %}
-    {% endif %}
-    
+    {% set admin_read_state_str = states[0] %}
+    {% set admin_write_state_str = states[1] %}
+
     <form method="post" id="empFrm">
         <div class="row mx-1 mb-1 page-heading">
             <div class="col">Employee Detail</div>
@@ -76,7 +67,7 @@
         <div class="row mx-1 mb-1">
             <div class="col-3"><label for="empNo">Emp. No.</label></div>
             <div class="col-2">
-                <input name="empNo" id="empNo" readonly class="selector-input" {{ write_disabled_str }}>
+                <input name="empNo" id="empNo" readonly class="selector-input" {{ write_state_str }}>
             </div>
         </div>
 
@@ -90,28 +81,28 @@
         <div class="row mx-1 mb-1">
             <div class="col-3"><label for="birthDate">Birth Date (dd/mm/yyy)</label></div>
             <div class="col-2">
-                <input name="birthDate" id="birthDate" required maxlength="10" class="selector-input" {{ write_disabled_str }}>
+                <input name="birthDate" id="birthDate" required maxlength="10" class="selector-input" {{ write_state_str }}>
             </div>
         </div>
 
         <div class="row mx-1 mb-1">
             <div class="col-3"><label for="firstName">First Name</label></div>
             <div class="col-2">
-                <input name="firstName" id="firstName" required maxlength="14" class="selector-input" {{ write_disabled_str }}>
+                <input name="firstName" id="firstName" required maxlength="14" class="selector-input" {{ write_state_str }}>
             </div>
         </div>
 
         <div class="row mx-1 mb-1">
             <div class="col-3"><label for="lastName">Last Name</label></div>
             <div class="col-2">
-                <input name="lastName" id="lastName" required maxlength="16" class="selector-input" {{ write_disabled_str }}>
+                <input name="lastName" id="lastName" required maxlength="16" class="selector-input" {{ write_state_str }}>
             </div>
         </div>
 
         <div class="row mx-1 mb-1">
             <div class="col-3"><label for="gender">Gender</label></div>
             <div class="col-1">
-                <select name="gender" id="gender" required class="selector-input" {{ write_disabled_str }}>
+                <select name="gender" id="gender" required class="selector-input" {{ write_state_str }}>
                     <option value="">--select--</option>
                     <option value="F">Female</option>
                     <option value="M">Male</option>
@@ -122,16 +113,20 @@
         <div class="row mx-1 mb-1">
             <div class="col-3"><label for="hireDate">Hire Date (dd/mm/yyy)</label></div>
             <div class="col-2">
-                <input name="hireDate" id="hireDate" required maxlength="10" class="selector-input" {{ write_disabled_str }}>
+                <input name="hireDate" id="hireDate" required maxlength="10" class="selector-input" {{ write_state_str }}>
             </div>
         </div>
 
         <div class="row mx-1 mb-1">
             <div class="col">
                 <button type="button" id="saveEmpBtn" class="btn btn-primary btn-sm" disabled>Save</button>
-                <button type="button" id="newEmpBtn" class="btn btn-primary btn-sm" data-url="emp/new" {{ admin_write_disabled_str }}>New</button>
+                <button type="button" id="newEmpBtn" class="btn btn-primary btn-sm" data-url="emp/new" {{ admin_write_state_str }}>New</button>
+                {% if admin_read_state_str == '' %}
                 <button type="button" id="empSearchBtn" class="btn btn-link" 
-                    onclick="location.href='/emp/search'" {{ admin_read_disabled_str }}>Search Employees</button>
+                    onclick="location.href='/emp/search'">Search Employees</button>
+                {% else %}
+                <span class="text-muted">Search Employees</span>
+                {% endif %}                
                 &nbsp;|&nbsp;
                 <a href="/auth/home" class="link-primary">Home</a>
             </div>
