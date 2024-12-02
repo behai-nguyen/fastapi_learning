@@ -59,17 +59,25 @@ def test_expired_jwt_json_response(test_client):
     
     response = test_client.get('/admin/me')
 
+    # See:
+    #     @app.exception_handler(RequiresLogin)
+    #     async def requires_login(request: Request, _: Exception):
     assert response != None
-    assert response.status_code == http_status.HTTP_401_UNAUTHORIZED
+    # assert response.status_code == http_status.HTTP_401_UNAUTHORIZED
+    assert response.status_code == http_status.HTTP_200_OK
 
     status = response.json()
-    assert status['detail'] == INVALID_CREDENTIALS_MSG
+    assert status != None
+    
+    # Should always check for this.
+    assert status['status']['code'] == http_status.HTTP_401_UNAUTHORIZED
+    assert status['status']['text'] == INVALID_CREDENTIALS_MSG
 
 @pytest.mark.expired_jwt
 def test_expired_jwt_html_response(test_client):
     """
     Test /admin/me path with an expired token. 
-    The response is in HTML, which is the default.
+    The response is the HTML login page.
     """
 
     importlib.reload(test_main)
@@ -97,13 +105,11 @@ def test_expired_jwt_html_response(test_client):
         assert response != None
         assert response.status_code == http_status.HTTP_200_OK
 
-        # admin me.html page.
-        assert ('<h2>It\'s on me... Please contact support, quoting the below message:</h2>' 
-                in response.text) == True
-        assert ('<h2 class="text-danger fw-bold">Could not validate credentials</h2>' 
-                in response.text) == True
-        assert ('<a class="link-opacity-100" href="/auth/home">Home</a>' 
-                in response.text) == True
+        # The login.html page with a specific message.
+        assert ('<title>Learn FastAPI Login</title>' in response.text) == True
+        assert (f'<h4>{INVALID_CREDENTIALS_MSG}</h4>' in response.text) == True
+        assert ('<input type="email" ' in response.text) == True
+        assert (' id="password" name="password" ' in response.text) == True
         
     finally:
         # Logout. Clean up server sessions.
