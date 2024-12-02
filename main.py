@@ -16,7 +16,7 @@ import os
 from contextlib import asynccontextmanager
 
 import uvicorn
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, Request, Response, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 
@@ -40,6 +40,8 @@ from fastapi_learning.controllers import (
     auth, 
     admin,
     employees_admin,
+    set_login_redirect_code,
+    set_login_redirect_message,
 )
 
 from fastapi_learning.controllers.required_login import RequiresLogin
@@ -109,8 +111,12 @@ async def index(request: Request) -> Response | dict:
 # Redirect to login using custom exception handlers.
 # See https://stackoverflow.com/a/76887329
 @app.exception_handler(RequiresLogin)
-async def requires_login(request: Request, _: Exception):
-    return RedirectResponse(url='/auth/login?state=2')
+async def requires_login(request: Request, e: HTTPException):
+    from fastapi_learning.common.consts import LOGIN_REDIRECT_STATE_CERTAIN
+
+    set_login_redirect_code(request, e.status_code)
+    set_login_redirect_message(request, e.detail)
+    return RedirectResponse(url=f"/auth/login?state={LOGIN_REDIRECT_STATE_CERTAIN}")
 
 #
 # Remove the code block below to use the command:
