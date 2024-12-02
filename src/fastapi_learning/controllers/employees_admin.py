@@ -42,13 +42,9 @@ from fastapi.responses import (
 
 from bh_apistatus.result_status import make_500_status
 
-from fastapi_learning import (
-    oauth2_scheme,
-    TokenData,
-)
-
 from fastapi_learning.common.queue_logging import logger
 
+from fastapi_learning.models.employees import LoggedInEmployee
 from fastapi_learning.businesses.employees_mgr import EmployeesManager
 
 from fastapi_learning.controllers import (
@@ -63,7 +59,10 @@ from fastapi_learning.common.consts import (
     EMPLOYEES_MAINTENANCE_PAGE_TITLE,
 )
 
-from fastapi_learning.controllers.required_login import get_logged_in_user
+from fastapi_learning.controllers.required_login import (
+    get_logged_in_user,
+    get_cached_logged_in_user,
+)
 
 from . import json_req
 
@@ -82,7 +81,7 @@ INSERT_PAGE = "emp/insert.html"
 async def do_search(request: Request,
                     last_name: str, first_name: str, 
                     security_scopes: SecurityScopes,
-                    token: Annotated[str, Depends(oauth2_scheme)]):
+                    user: Annotated[LoggedInEmployee, Depends(get_cached_logged_in_user)]):
     """
     Attempts to search employees using partial last name and partial first name.
 
@@ -126,7 +125,7 @@ async def do_search(request: Request,
         }
     """
 
-    res, token_data, exception = await verify_user_scopes(security_scopes, token, INVALID_PERMISSIONS_MSG)
+    res, exception = await verify_user_scopes(security_scopes, user, INVALID_PERMISSIONS_MSG)
     if not res:
         if json_req(request): 
             return make_500_status(exception.detail).as_dict()
@@ -140,7 +139,7 @@ async def do_search(request: Request,
     return status.as_dict() if json_req(request) else \
         templates.TemplateResponse(request=request, name=SEARCH_RESULT_PAGE,
                                    context={"status": status.as_dict(), 
-                                            "data": {"user_scopes": token_data.scopes},
+                                            "data": {"user_scopes": user.scopes},
                                             "title": SEARCH_EMPLOYEES_PAGE_TITLE})
 
 @router.post("/search/{last_name}/{first_name}")
@@ -158,10 +157,10 @@ async def search(request: Request, last_name: str, first_name: str,
 
 async def get_employee_to_update(request: Request, emp_no: str, 
                                  security_scopes: SecurityScopes,
-                                 token: Annotated[str, Depends(oauth2_scheme)]):
+                                 user: Annotated[LoggedInEmployee, Depends(get_cached_logged_in_user)]):
 
-    def __get_page_data(token_data: TokenData) -> dict:
-        res = {"user_scopes": token_data.scopes}
+    def __get_page_data(user: LoggedInEmployee) -> dict:
+        res = {"user_scopes": user.scopes}
 
         res.update({"required_scopes": ["admin:write"], "save_url": "/emp/admin-save"}) \
             if 'admin:read' in security_scopes.scopes \
@@ -169,7 +168,7 @@ async def get_employee_to_update(request: Request, emp_no: str,
         
         return res
     
-    res, token_data, exception = await verify_user_scopes(security_scopes, token, INVALID_PERMISSIONS_MSG)
+    res, exception = await verify_user_scopes(security_scopes, user, INVALID_PERMISSIONS_MSG)
 
     if not res:
         if json_req(request): 
@@ -184,7 +183,7 @@ async def get_employee_to_update(request: Request, emp_no: str,
     return status.as_dict() if json_req(request) else \
         templates.TemplateResponse(request=request, name=UPDATE_PAGE,
                                    context={"employee": status.serialise_data(),
-                                            "data": __get_page_data(token_data),
+                                            "data": __get_page_data(user),
                                             "title": EMPLOYEES_MAINTENANCE_PAGE_TITLE})
 
 @router.get("/admin-get-update/{emp_no}")
@@ -231,9 +230,9 @@ async def user_update(request: Request, emp_no: str,
 
 async def do_save(request: Request, 
                   security_scopes: SecurityScopes,
-                  token: Annotated[str, Depends(oauth2_scheme)]):
+                  user: Annotated[LoggedInEmployee, Depends(get_cached_logged_in_user)]):
     
-    res, _, exception = await verify_user_scopes(security_scopes, token, INVALID_PERMISSIONS_MSG)
+    res, exception = await verify_user_scopes(security_scopes, user, INVALID_PERMISSIONS_MSG)
 
     if not res:
         return make_500_status(exception.detail).as_dict()
@@ -280,19 +279,19 @@ async def user_save(request: Request,
 
 async def get_employee_insert_form(request: Request, 
                                    security_scopes: SecurityScopes,
-                                   token: Annotated[str, Depends(oauth2_scheme)]):
+                                   user: Annotated[LoggedInEmployee, Depends(get_cached_logged_in_user)]):
 
-    def __get_page_data(token_data: TokenData) -> dict:
-        return {"user_scopes": token_data.scopes, "save_url": "/emp/admin-save"}
+    def __get_page_data(user: LoggedInEmployee) -> dict:
+        return {"user_scopes": user.scopes, "save_url": "/emp/admin-save"}
     
-    res, token_data, exception = await verify_user_scopes(security_scopes, token, INVALID_PERMISSIONS_MSG)
+    res, exception = await verify_user_scopes(security_scopes, user, INVALID_PERMISSIONS_MSG)
     if not res:
         return templates.TemplateResponse(request=request, name=INSERT_PAGE,
                                           context={"exception": exception,
                                                    "title": EMPLOYEES_MAINTENANCE_PAGE_TITLE})
 
     return templates.TemplateResponse(request=request, name=INSERT_PAGE,
-                                      context={"data": __get_page_data(token_data),
+                                      context={"data": __get_page_data(user),
                                                "title": EMPLOYEES_MAINTENANCE_PAGE_TITLE}) 
 
 @router.get("/new", response_class=HTMLResponse)
@@ -307,13 +306,13 @@ async def new(request: Request,
 
 async def get_emp_search_form(request: Request,
                               security_scopes: SecurityScopes,
-                              token: Annotated[str, Depends(oauth2_scheme)]):
+                              user: Annotated[LoggedInEmployee, Depends(get_cached_logged_in_user)]):
     
-    _, token_data, exception = await verify_user_scopes(security_scopes, token, INVALID_PERMISSIONS_MSG)
+    _, exception = await verify_user_scopes(security_scopes, user, INVALID_PERMISSIONS_MSG)
 
     return templates.TemplateResponse(request=request, name=SEARCH_PAGE,
                                       context={"exception": exception, 
-                                               "data": {"user_scopes": token_data.scopes},
+                                               "data": {"user_scopes": user.scopes},
                                                "title": SEARCH_EMPLOYEES_PAGE_TITLE})
 
 @router.get('/search', response_class=HTMLResponse)
