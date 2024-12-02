@@ -42,7 +42,20 @@ def test_scope_permission_login_01(test_client):
     in ./src/fastapi_learning/businesses/employees_mgr.py's MOCK_USER_SCOPES.
 
     Note: see test module tests\integration\test_auth_itgt.py for complete 
-    authorisation (log in) tests.    
+    authorisation (log in) tests.
+
+    Response:
+        {
+            "status": {
+                "code": 200,
+                "text": ""
+            },
+            "data": {
+                "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiZWhhaV9uZ3V5ZW5AaG90bWFpbC5jb20iLCJlbXBfbm8iOjUwMDIyMiwic2NvcGVzIjpbInVzZXI6cmVhZCIsInVzZXI6d3JpdGUiXSwiZXhwIjoxNzMyODk0NjA1fQ.aXLKHcNmAKn5XEe0pjpoh7u0tPT6dTnuUUztnLwP3_o",
+                "detail": "",
+                "token_type": "bearer"
+            }
+        }
     """
 
     importlib.reload(test_main)
@@ -64,8 +77,18 @@ def test_scope_permission_login_01(test_client):
 
         status = login_response.json()
 
-        token_data = decode_access_token(status['access_token'])
+        # Should always check for this.
+        assert status['status']['code'] == http_status.HTTP_200_OK
+        assert status['status']['text'] == ''
+		
+        assert ('data' in status) == True
+        data = status['data']
+        token_data = decode_access_token(data['access_token'])
         assert isinstance(token_data, TokenData) == True
+
+        assert token_data.user_name == 'behai_nguyen@hotmail.com'
+        assert data['detail'] == ''
+        assert data['token_type'] == 'bearer'
 
         assert len(token_data.scopes) == 2
         assert token_data.scopes[0] == 'user:read'
@@ -84,7 +107,20 @@ def test_scope_permission_login_02(test_client):
     in ./src/fastapi_learning/businesses/employees_mgr.py's MOCK_USER_SCOPES.
 
     Note: see test module tests\integration\test_auth_itgt.py for complete 
-    authorisation (log in) tests.    
+    authorisation (log in) tests.
+
+    Response:
+        {
+            "status": {
+                "code": 200,
+                "text": ""
+            },
+            "data": {
+                "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJtb3NzLnNoYW5iaG9ndWUuMTAwNDVAZ21haWwuY29tIiwiZW1wX25vIjoxMDA0NSwic2NvcGVzIjpbXSwiZXhwIjoxNzMyODk0ODk4fQ.D0rTkGGBSkAkAieGV3ui6wcPoVMm8SgqfhdXAvLjyfc",
+                "detail": "",
+                "token_type": "bearer"
+            }
+        }
     """
 
     importlib.reload(test_main)
@@ -106,8 +142,17 @@ def test_scope_permission_login_02(test_client):
 
         status = login_response.json()
 
-        token_data = decode_access_token(status['access_token'])
+        assert status['status']['code'] == http_status.HTTP_200_OK
+        assert status['status']['text'] == ''
+		
+        assert ('data' in status) == True
+        data = status['data']
+        token_data = decode_access_token(data['access_token'])
         assert isinstance(token_data, TokenData) == True
+
+        assert token_data.user_name == 'moss.shanbhogue.10045@gmail.com'
+        assert data['detail'] == ''
+        assert data['token_type'] == 'bearer'
 
         assert len(token_data.scopes) == 0
 
@@ -125,7 +170,20 @@ def test_scope_permission_login_03(test_client):
     in ./src/fastapi_learning/businesses/employees_mgr.py's MOCK_USER_SCOPES.
 
     Note: see test module tests\integration\test_auth_itgt.py for complete 
-    authorisation (log in) tests.    
+    authorisation (log in) tests.
+
+    Response:
+        {
+            "status": {
+                "code": 200,
+                "text": ""
+            },
+            "data": {
+                "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJrYXp1aGlzYS5yYW50YS4xMDE5OUBnbWFpbC5jb20iLCJlbXBfbm8iOjEwMTk5LCJzY29wZXMiOlsidXNlcjpyZWFkIl0sImV4cCI6MTczMjg5NzE4Nn0.5AKIfrWFewyPrT80ZwRoyX_5aHYV7WgPXiGKIj9EbyA",
+                "detail": "",
+                "token_type": "bearer"
+            }
+        }
     """
 
     importlib.reload(test_main)
@@ -147,8 +205,26 @@ def test_scope_permission_login_03(test_client):
 
         status = login_response.json()
 
+        """
         token_data = decode_access_token(status['access_token'])
         assert isinstance(token_data, TokenData) == True
+
+        assert len(token_data.scopes) == 1
+        assert token_data.scopes[0] == 'user:read'
+        """
+
+        # Should always check for this.
+        assert status['status']['code'] == http_status.HTTP_200_OK
+        assert status['status']['text'] == ''
+		
+        assert ('data' in status) == True
+        data = status['data']
+        token_data = decode_access_token(data['access_token'])
+        assert isinstance(token_data, TokenData) == True
+
+        assert token_data.user_name == 'kazuhisa.ranta.10199@gmail.com'
+        assert data['detail'] == ''
+        assert data['token_type'] == 'bearer'
 
         assert len(token_data.scopes) == 1
         assert token_data.scopes[0] == 'user:read'
@@ -192,11 +268,15 @@ def test_scope_permission_invalid_json(test_client):
         response = test_client.get('/admin/me')
 
         assert response != None
-        assert response.status_code == http_status.HTTP_401_UNAUTHORIZED
+        # assert response.status_code == http_status.HTTP_401_UNAUTHORIZED
+        assert response.status_code == http_status.HTTP_200_OK
 
         status = response.json()
         print(status)
-        assert status['detail'] == INVALID_PERMISSIONS_MSG
+
+        # Should always check for this.
+        assert status['status']['code'] == http_status.HTTP_401_UNAUTHORIZED
+        assert status['status']['text'] == INVALID_PERMISSIONS_MSG
 
     finally:
         # Logout. Clean up server sessions.
@@ -264,11 +344,15 @@ def test_scope_permission_api_me(test_client):
         response = test_client.get('/api/me')
 
         assert response != None
-        assert response.status_code == http_status.HTTP_401_UNAUTHORIZED
+        # assert response.status_code == http_status.HTTP_401_UNAUTHORIZED
+        assert response.status_code == http_status.HTTP_200_OK
 
         status = response.json()
         print(status)
-        assert status['detail'] == INVALID_PERMISSIONS_MSG
+
+        # Should always check for this.
+        assert status['status']['code'] == http_status.HTTP_401_UNAUTHORIZED
+        assert status['status']['text'] == INVALID_PERMISSIONS_MSG
 
     finally:
         # Logout. Clean up server sessions.
