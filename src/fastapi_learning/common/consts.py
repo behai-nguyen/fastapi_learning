@@ -2,6 +2,8 @@
 15/05/2024.
 """
 
+LOGIN_REDIRECT_STATE_CERTAIN = 20
+
 RESPONSE_FORMAT = "x-expected-format"
 
 LOGIN_PAGE_TITLE = "Learn FastAPI Login"
@@ -19,7 +21,7 @@ INVALID_USERNAME_PASSWORD_MSG = "Incorrect username or password"
 NOT_LOGGED_IN_SESSION_MSG = "This session has not been logged in before"
 LOGGED_IN_SESSION_MSG = "Already logged in"
 
-NOT_AUTHENTICATED_MSG = "Not authenticated"
+NOT_AUTHENTICATED_MSG = "Not authenticated or authentication has expired"
 INVALID_CREDENTIALS_MSG = "Could not validate credentials"
 INVALID_AUTH_CREDENTIALS_MSG = "Invalid authentication credentials"
 INVALID_PERMISSIONS_MSG = "Not enough permissions"
