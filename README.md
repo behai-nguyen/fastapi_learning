@@ -149,26 +149,39 @@ git clone -b v0.13.0 https://github.com/behai-nguyen/fastapi_learning.git
 
 In the last post of this <a href="https://github.com/behai-nguyen/fastapi_learning" title="Index of the Complete Series" target="_blank">Python FastAPI learning series</a>, we concluded with a list of <a href="https://behainguyen.wordpress.com/2024/11/22/python-fastapi-oauth2-scopes-part-03-new-crud-endpoints-and-user-assigned-scopes/#concluding-remarks" title="Python FastAPI: OAuth2 Scopes Part 03 - New CRUD Endpoints and User-Assigned Scopes" target="_blank">to-do items</a>. In this post, we will address these issues. Additionally, we are performing some code cleanup and improvements.
 
+14. [Python FastAPI: Bug Fixing the Logout Process and Redis Session Cleanup](https://behainguyen.wordpress.com/2025/01/05/python-fastapi-bug-fixing-the-logout-process-and-redis-session-cleanup/)
+
+<pre style="border:1px solid silver;width:95%;padding:1em;margin:auto;font-family:Monaco,Consolas,Menlo,Courier,monospace;font-size:1.2em;overflow-x: scroll;">
+git clone -b v0.14.0 https://github.com/behai-nguyen/fastapi_learning.git
+</pre><br/>
+
+While experimenting with some CLI clients for the server implemented in this <a href="https://github.com/behai-nguyen/fastapi_learning" title="Index of the Complete Series" target="_blank">Python FastAPI learning series</a>, I found two similar bugs in the server: both were related to Redis session entries not being cleaned up.
+
+The first bug involves some temporary redirection entries that do not get removed after the requests are completed. The second, more significant bug, is that the logout process does not clean up the session entry if the incoming request has only the access token and no session cookies.
+
+We address both of these bugs in this post, with most of the focus on the second one.
+
+
 ## Implemented routes
 
-|     | Route                    | Method | Scopes    | Response   |
-| --: | ------------------------ | :----: | --------- | ---------- |
-| 1   | /auth/token (/api/login) | POST   | None      | JSON, HTML |
-| 2   | /auth/login (/)          | GET    | None      | HTML       |
-| 3   | /admin/me (/api/me)      | GET    | user:read | JSON, HTML |
-| 4   | /auth/home               | GET    | None      | HTML       |
-| 5   | / (/auth/login)          | GET    | None      | HTML       |
-| 6   | /auth/logout             | POST   | None      | HTML       |
-| 7   | /api/me (/admin/me)      | GET    | user:read | JSON, HTML |
-| 8   | /api/login (/auth/token) | POST   | None      | JSON, HTML |
-| 9   | /emp/search | GET | admin:read | HTML |
-| 10  | /emp/search/{partial-last-name}/{partial-first-name} | GET, POST | admin:read | HTML, JSON |
-| 11  | /emp/admin-get-update/{emp_no} | GET | admin:read | HTML, JSON |
-| 12  | /emp/own-get-update/{emp_no} | GET | user:read | HTML, JSON |
-| 13  | /emp/admin-save | POST | admin:write | JSON |
-| 14  | /emp/user-save | POST | user:write | JSON | 
-| 15  | /emp/new | GET | admin:write | HTML |
-
+|     | Route                      | Method | Scopes    | Response   |
+| --: | -------------------------- | :----: | --------- | ---------- |
+| 1   | /auth/token (/api/login)   | POST   | None      | JSON, HTML |
+| 2   | /auth/login (/)            | GET    | None      | HTML       |
+| 3   | /admin/me (/api/me)        | GET    | user:read | JSON, HTML |
+| 4   | /auth/home                 | GET    | None      | HTML       |
+| 5   | / (/auth/login)            | GET    | None      | HTML       |
+| 6   | /auth/logout (/api/logout) | POST   | None      | HTML       |
+| 7   | /api/me (/admin/me)        | GET    | user:read | JSON, HTML |
+| 8   | /api/login (/auth/token)   | POST   | None      | JSON, HTML |
+| 9   | /api/logout (/auth/logout) | POST   | None      | JSON, HTML |
+| 10  | /emp/search | GET | admin:read | HTML |
+| 11  | /emp/search/{partial-last-name}/{partial-first-name} | GET, POST | admin:read | HTML, JSON |
+| 12  | /emp/admin-get-update/{emp_no} | GET | admin:read | HTML, JSON |
+| 13  | /emp/own-get-update/{emp_no} | GET | user:read | HTML, JSON |
+| 14  | /emp/admin-save | POST | admin:write | JSON |
+| 15  | /emp/user-save | POST | user:write | JSON | 
+| 16  | /emp/new | GET | admin:write | HTML |
 
 ## License
 [MIT license](http://www.opensource.org/licenses/mit-license.php)
