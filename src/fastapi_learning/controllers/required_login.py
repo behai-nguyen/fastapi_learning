@@ -49,7 +49,7 @@ async def get_logged_in_user(request: Request,
     
     return logged_in_user
     
-async def get_cached_logged_in_user(request: Request) -> LoggedInEmployee:
+async def get_cached_logged_in_user(request: Request, delete_also: bool=True) -> LoggedInEmployee:
     """
     Retrieve the cached logged-in user in session stored by get_logged_in_user(...).
     The intention is this method is called in the same request after verifying the 
@@ -58,4 +58,11 @@ async def get_cached_logged_in_user(request: Request) -> LoggedInEmployee:
 
     import json
 
-    return LoggedInEmployee( **json.loads(request.session["logged_in_user"]) )
+    emp = LoggedInEmployee( **json.loads(request.session["logged_in_user"]) )
+
+    if delete_also: request.session.pop("logged_in_user", None)
+
+    return emp
+
+def delete_cached_logged_in_user(request: Request):
+    request.session.pop("logged_in_user", None)
