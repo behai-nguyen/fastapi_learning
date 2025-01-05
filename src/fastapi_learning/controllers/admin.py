@@ -30,7 +30,10 @@ from fastapi_learning.common.consts import (
 
 from fastapi_learning.common.queue_logging import logger
 
-from fastapi_learning.controllers.required_login import get_logged_in_user
+from fastapi_learning.controllers.required_login import (
+    get_logged_in_user,
+    delete_cached_logged_in_user,
+)
 
 from . import json_req, JsonAPIRoute
 
@@ -67,12 +70,20 @@ async def get_current_user(
     return user
 
 @router.get("/me")
+@api_router.get("/me")
 async def read_users_me(
     request: Request, 
     current_user: Annotated[LoggedInEmployee, 
                             Security(get_current_user, scopes=["user:read"])]
 ):
     """
+    Implements both ``/admin/me`` and ``/api/me``. 
+    
+    For ``/admin/me``: The default return format is ``HTML``.
+
+    For ``/api/me``: The incoming request header ``x-expected-format`` set 
+    to ``application/json``.
+
     This returns the currently logged-in user’s information in either 
     ``JSON`` or ``HTML`` format.
 
@@ -99,6 +110,11 @@ async def read_users_me(
         return templates.TemplateResponse(request=request, name="admin/me.html", 
                 context={'data': user_dict})
 
+    # get_current_user(...) creates a cached session entry for logged in user.
+    #    A cached entry is always created for a valid login, regardless of 
+    #    whether or not the user has user:read scope to read their own details.
+    delete_cached_logged_in_user(request)
+
     if isinstance(current_user, LoggedInEmployee):
         logger.debug('Returning a valid logged-in user.')
 
@@ -113,20 +129,3 @@ async def read_users_me(
         else: 
             return templates.TemplateResponse(request=request, name="admin/me.html", 
                     context={'data': vars(current_user)})
-
-#=================================== /api ==================================
-
-@api_router.get("/me")
-async def read_users_me_api(
-    request: Request,
-    current_user: Annotated[LoggedInEmployee, 
-                            Security(get_current_user, scopes=["user:read"])]
-):
-    """
-    This endpoint is equivalent to ``/admin/me``, with the incoming request 
-    header ``x-expected-format`` set to ``application/json``.
-
-    For documentation, please refer to the method [read_users_me](docs#/Admin/read_users_me_admin_me_get).
-    """
-    
-    return await read_users_me(request, current_user)
