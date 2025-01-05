@@ -52,6 +52,7 @@ class TokenData(BaseModel):
     user_name: str | None = None
     user_number: int | None = None
     scopes: list[str] = []
+    session_id: str | None = None
 
 """
 When we create an instance of the OAuth2PasswordBearer class we pass 
