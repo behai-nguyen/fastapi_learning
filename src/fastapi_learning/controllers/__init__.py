@@ -2,6 +2,8 @@
 14/05/2024.
 """
 
+import os
+
 from typing import (
     Union, 
     Callable, 
@@ -22,6 +24,8 @@ from fastapi.security import SecurityScopes
 
 from fastapi.routing import APIRoute
 
+import redis
+
 from fastapi_learning.common.queue_logging import logger
 from fastapi_learning import TokenData
 from fastapi_learning.common.consts import (
@@ -33,6 +37,9 @@ from fastapi_learning.common.jwt_utils import decode_access_token
 from fastapi_learning.common.scope_utils import has_required_permissions
 
 logger = logger()
+
+redis_server = redis.Redis(host=os.environ.get("REDIS_URL", "redis://localhost").split('//')[1], 
+                           decode_responses=True)
 
 def valid_logged_in_employee(data: dict) -> bool:
     """
@@ -125,7 +132,7 @@ def credentials_exception(detail: str=NOT_AUTHENTICATED_MSG,
         headers = {"WWW-Authenticate": authenticate_value},
     )
 
-def attempt_decoding_access_token(token: str) -> Union[TokenData, HTTPException]:
+def attempt_decoding_access_token(token: str, verify_exp: bool=True) -> Union[TokenData, HTTPException]:
     # OAuth2PasswordBearer auto_error has been set to False. 
     # The return value is None instead of an HTTPException.
     # This is the same exception raised by OAuth2PasswordBearer. 
@@ -135,7 +142,7 @@ def attempt_decoding_access_token(token: str) -> Union[TokenData, HTTPException]
         logger.debug(exception.detail)
         return exception
     
-    return decode_access_token(token)
+    return decode_access_token(token, verify_exp)
 
 def json_req(request: Request):
     if RESPONSE_FORMAT in request.headers:
@@ -150,12 +157,10 @@ async def html_req(request: Request):
         https://stackoverflow.com/a/64910954
         https://stackoverflow.com/a/76971147
     """
-    if RESPONSE_FORMAT in request.headers:
-        if request.headers[RESPONSE_FORMAT] == types_map['.html']:
-            return True
-
     form_data = await request.form()
-    return form_data.get(RESPONSE_FORMAT) == types_map['.html']
+
+    return ( form_data.get(RESPONSE_FORMAT) or request.cookies.get(RESPONSE_FORMAT) \
+        or request.headers.get(RESPONSE_FORMAT) ) == types_map['.html']
 
 def set_access_token(request: Request, token: str):
     request.session["access_token"] = token
@@ -165,9 +170,6 @@ def get_access_token(request: Request) -> Union[str | None]:
 
 def delete_access_token(request: Request):
     request.session.pop("access_token", None)
-
-def no_access_token(request: Request) -> bool:
-    return request.session.get("access_token") == None
 
 def set_login_redirect_code(request: Request, code: int):
     request.session["login_redirect_code"] = code
