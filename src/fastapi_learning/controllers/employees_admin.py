@@ -62,6 +62,7 @@ from fastapi_learning.common.consts import (
 from fastapi_learning.controllers.required_login import (
     get_logged_in_user,
     get_cached_logged_in_user,
+    delete_cached_logged_in_user,
 )
 
 from . import json_req
@@ -273,6 +274,8 @@ async def user_save(request: Request,
 
     form = await request.form()
     if user.emp_no != int(form._dict['empNo']):
+        # get_logged_in_user(...) creates a cached entry of the logged in user.
+        delete_cached_logged_in_user(request)
         return make_500_status(INVALID_PERMISSIONS_MSG).as_dict()    
 
     return response
