@@ -26,7 +26,7 @@ def create_access_token(data: dict, expires_delta: Union[timedelta, None] = None
                              algorithm=os.environ.get('ALGORITHM'))
     return encoded_jwt
 
-def decode_access_token(token: str) -> Union[TokenData, HTTPException]:
+def decode_access_token(token: str, verify_exp: bool=True) -> Union[TokenData, HTTPException]:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail=INVALID_CREDENTIALS_MSG,
@@ -35,7 +35,8 @@ def decode_access_token(token: str) -> Union[TokenData, HTTPException]:
 
     try:
         payload = jwt.decode(token, os.environ.get('SECRET_KEY'), 
-                             algorithms=[os.environ.get('ALGORITHM')])
+                             algorithms=[os.environ.get('ALGORITHM')],
+                             options={'verify_exp': verify_exp})
         
         username: str = payload.get("sub")
         if username is None:
@@ -45,7 +46,8 @@ def decode_access_token(token: str) -> Union[TokenData, HTTPException]:
         if usernumber is None:
             return credentials_exception
         
-        return TokenData(user_name=username, user_number=usernumber, scopes=payload.get("scopes", []))
+        return TokenData(user_name=username, user_number=usernumber, 
+                         scopes=payload.get("scopes", []), session_id=payload.get("session_id"))
 
     except InvalidTokenError:
         return credentials_exception
