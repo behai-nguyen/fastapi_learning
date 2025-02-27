@@ -16,7 +16,7 @@ import os
 from contextlib import asynccontextmanager
 
 import uvicorn
-from fastapi import FastAPI, Request, Response, HTTPException
+from fastapi import FastAPI, Request, Response, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 
@@ -116,7 +116,8 @@ async def requires_login(request: Request, e: HTTPException):
 
     set_login_redirect_code(request, e.status_code)
     set_login_redirect_message(request, e.detail)
-    return RedirectResponse(url=f"/auth/login?state={LOGIN_REDIRECT_STATE_CERTAIN}")
+    return RedirectResponse(url=f"/auth/login?state={LOGIN_REDIRECT_STATE_CERTAIN}",
+                            status_code=status.HTTP_303_SEE_OTHER)
 
 #
 # Remove the code block below to use the command:
