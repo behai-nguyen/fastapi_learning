@@ -151,9 +151,9 @@ In the last post of this <a href="https://github.com/behai-nguyen/fastapi_learni
 
 14. [Python FastAPI: Bug Fixing the Logout Process and Redis Session Cleanup](https://behainguyen.wordpress.com/2025/01/05/python-fastapi-bug-fixing-the-logout-process-and-redis-session-cleanup/)
 
-<pre style="border:1px solid silver;width:95%;padding:1em;margin:auto;font-family:Monaco,Consolas,Menlo,Courier,monospace;font-size:1.2em;overflow-x: scroll;">
+```
 git clone -b v0.14.0 https://github.com/behai-nguyen/fastapi_learning.git
-</pre><br/>
+```
 
 While experimenting with some CLI clients for the server implemented in this <a href="https://github.com/behai-nguyen/fastapi_learning" title="Index of the Complete Series" target="_blank">Python FastAPI learning series</a>, I found two similar bugs in the server: both were related to Redis session entries not being cleaned up.
 
@@ -161,6 +161,13 @@ The first bug involves some temporary redirection entries that do not get remove
 
 We address both of these bugs in this post, with most of the focus on the second one.
 
+15. A Bug Fixed
+
+```
+git clone -b v0.15.0 https://github.com/behai-nguyen/fastapi_learning.git
+```
+
+Added the post [Python UI: A PyQt6 MDI HTTP Client Application](https://behainguyen.wordpress.com/2025/02/27/python-ui-a-pyqt6-mdi-http-client-application/) which introduces a new Python UI client.
 
 ## Implemented routes
 
